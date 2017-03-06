@@ -6,13 +6,11 @@
 </head>
 <body>
 <div id="app">
-    <textarea v-model="snippet" cols="60" rows="7" v-on:input="updateVariables"></textarea>
-    <br>
+    <textarea v-model="snippet" cols="60" rows="7" v-on:input="updateVariables"></textarea><br>
     <div v-for="(value, key) in variables">
         <label :for="key">{{ key }}</label>
         <input class="input" type="text" :placeholder="value || key" :id="key" v-model="variablesResult[key]"
-               v-on:input="updateResult">
-        <br>
+               v-on:input="updateResult"><br>
     </div>
     <label for="result">Result</label>
     <button @click="copyResult">Copy</button>
@@ -67,8 +65,7 @@
                 let o = this.variablesResult
                 Object.keys(o).forEach(k => hash.push([k, o[k]]))
                 location.hash = hash.map(e => e.map(e => encodeURIComponent(e)).join('=')).join('&')
-            },
-
+            }
         }
     });
 
