@@ -19,7 +19,7 @@
 </div>
 <script type="text/javascript">
     function getVariables(value) {
-        return Object.assign(...( value.match(/{{.+?}}/g) || [''])
+        return Object.assign({}, ...(value.match(/{{.+?}}/g) || [])
             .map(e => e.slice(2, -2).split('|').map(e => (e || '').trim()))
             .map(d => ({[d[0]]: d[1]}))
         )
