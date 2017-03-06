@@ -1,0 +1,143 @@
+[debug] ----------------------------------------------------------------------
+[debug] Command:      /usr/bin/nodejs /usr/local/bin/firebase login
+[debug] CLI Version:  3.4.0
+[debug] Platform:     linux
+[debug] Node Version: v4.2.6
+[debug] Time:         Mon Mar 06 2017 16:46:50 GMT+0200 (EET)
+[debug] ----------------------------------------------------------------------
+[debug] 
+[info] 
+[info] Visit this URL on any device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase&response_type=code&state=543041114&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] ----------------------------------------------------------------------
+[debug] Command:      /usr/bin/nodejs /usr/local/bin/firebase login
+[debug] CLI Version:  3.4.0
+[debug] Platform:     linux
+[debug] Node Version: v4.2.6
+[debug] Time:         Mon Mar 06 2017 16:47:04 GMT+0200 (EET)
+[debug] ----------------------------------------------------------------------
+[debug] 
+[info] 
+[info] Visit this URL on any device to log in:
+[info] https://accounts.google.com/o/oauth2/auth?client_id=563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com&scope=email%20openid%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fcloudplatformprojects.readonly%20https%3A%2F%2Fwww.googleapis.com%2Fauth%2Ffirebase&response_type=code&state=221786086&redirect_uri=http%3A%2F%2Flocalhost%3A9005
+[info] 
+[info] Waiting for authentication...
+[debug] >>> HTTP REQUEST POST https://accounts.google.com/o/oauth2/token { code: '4/Tp5MAjRa3bYxtcBbsE2ojI2mumRIMNwrZvogLvuBo5I',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  redirect_uri: 'http://localhost:9005',
+  grant_type: 'authorization_code' } 
+ Mon Mar 06 2017 16:47:45 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[info] 
+[info] ✔  Success! Logged in as anc813@gmail.com
+[debug] Error: ETXTBSY: text file is busy, unlink '/media/sf_projects/myservices/firebase-debug.log'
+    at Error (native)
+    at Object.fs.unlinkSync (fs.js:932:18)
+    at process.<anonymous> (/usr/local/lib/node_modules/firebase-tools/bin/firebase:60:8)
+    at emitOne (events.js:82:20)
+    at process.emit (events.js:169:7)
+[debug] ----------------------------------------------------------------------
+[debug] Command:      /usr/bin/nodejs /usr/local/bin/firebase init
+[debug] CLI Version:  3.4.0
+[debug] Platform:     linux
+[debug] Node Version: v4.2.6
+[debug] Time:         Mon Mar 06 2017 16:48:02 GMT+0200 (EET)
+[debug] ----------------------------------------------------------------------
+[debug] 
+[debug] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase"]
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /media/sf_projects/myservices
+
+Before we get started, keep in mind:
+
+  * You are currently outside your home directory
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] > refreshing access token with scopes: ["email","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","openid"]
+[debug] >>> HTTP REQUEST POST https://www.googleapis.com/oauth2/v3/token { refresh_token: '1/edZa1eEHGpTDhMe9NIMjwclTlLBMIe7xu5XADtX2m78',
+  client_id: '563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com',
+  client_secret: 'j9iVZfS8kkCEFUPaAeJV0sAi',
+  grant_type: 'refresh_token',
+  scope: 'email https://www.googleapis.com/auth/cloudplatformprojects.readonly https://www.googleapis.com/auth/firebase openid' } 
+ Mon Mar 06 2017 16:48:14 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[debug] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects  
+ Mon Mar 06 2017 16:48:15 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[info] 
+=== Hosting Setup
+[info] 
+[info] Your public directory is the folder (relative to your project directory) that
+[info] will contain Hosting assets to be uploaded with firebase deploy. If you
+[info] have a build process for your assets, use your build's output directory.
+[info] 
+[info] ✔  Wrote ./404.html
+[info] i  Skipping write of ./index.html
+[info] 
+[info] i  Writing configuration info to firebase.json...
+[info] i  Writing project information to .firebaserc...
+[info] 
+[info] ✔  Firebase initialization complete!
+[debug] Error: ETXTBSY: text file is busy, unlink '/media/sf_projects/myservices/firebase-debug.log'
+    at Error (native)
+    at Object.fs.unlinkSync (fs.js:932:18)
+    at process.<anonymous> (/usr/local/lib/node_modules/firebase-tools/bin/firebase:60:8)
+    at emitOne (events.js:82:20)
+    at process.emit (events.js:169:7)
+[debug] ----------------------------------------------------------------------
+[debug] Command:      /usr/bin/nodejs /usr/local/bin/firebase deploy
+[debug] CLI Version:  3.4.0
+[debug] Platform:     linux
+[debug] Node Version: v4.2.6
+[debug] Time:         Mon Mar 06 2017 16:49:15 GMT+0200 (EET)
+[debug] ----------------------------------------------------------------------
+[debug] 
+[debug] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase"]
+[debug] >>> HTTP REQUEST GET https://admin.firebase.com/v1/projects/services-615d8  
+ Mon Mar 06 2017 16:49:15 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[debug] >>> HTTP REQUEST GET https://admin.firebase.com/v1/database/services-615d8/tokens  
+ Mon Mar 06 2017 16:49:17 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[info] 
+[info] === Deploying to 'services-615d8'...
+[info] 
+[info] i  deploying hosting
+[info] ✔  database: rules ready to deploy.
+[info] i  hosting: preparing . directory for upload...
+[debug] >>> HTTP REQUEST PUT https://deploy.firebase.com/v1/hosting/services-615d8/uploads/-KeZ58XZ_lLxyNgGD00C?fileCount=39&message=  
+ Mon Mar 06 2017 16:49:20 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[info] ✔  hosting: . folder uploaded successfully
+[info] ✔  hosting: 39 files uploaded successfully
+[info] i  starting release process (may take several minutes)...
+[debug] >>> HTTP REQUEST POST https://deploy.firebase.com/v1/projects/services-615d8/releases { database: { rulesString: undefined },
+  hosting: 
+   { public: '.',
+     version: '-KeZ58XZ_lLxyNgGD00C',
+     prefix: '-KeZ58XZ_lLxyNgGD00C/',
+     manifest: [] } } 
+ Mon Mar 06 2017 16:49:22 GMT+0200 (EET)
+[debug] <<< HTTP RESPONSE 200
+[info] 
+[info] ✔  Deploy complete!
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/services-615d8/overview
+[info] Hosting URL: https://services-615d8.firebaseapp.com
