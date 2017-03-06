@@ -34,8 +34,8 @@
             this.updateVariables()
         },
         data: {
-            snippet: 'ssh modom "sudo -u postgres  pg_dump {{ remote db name}} > /tmp/{{ dump file name }}.sql" && scp modom:/tmp/{{ dump file name }}.sql /tmp/{{ dump file name }}.sql && sudo -u postgres dropdb {{ local db name }} && sudo -u postgres createdb -O {{ local db user name|owner }} {{ local db name }} && sudo -u postgres psql {{ local db name }} < /tmp/{{ dump file name }}',
-            result: 'Hello World!',
+            snippet: 'ssh {{ ssh path|root@mydomain.com }} "sudo -u postgres  pg_dump {{ remote db name}} > /tmp/{{ dump file name }}.sql" && scp {{ ssh path|root@mydomain.com }}:/tmp/{{ dump file name }}.sql /tmp/{{ dump file name }}.sql && sudo -u postgres dropdb {{ local db name }} && sudo -u postgres createdb -O {{ local db user name|owner }} {{ local db name }} && sudo -u postgres psql {{ local db name }} < /tmp/{{ dump file name }}',
+            result: '',
             variables: {},
             variablesResult: {}
         },
@@ -53,7 +53,7 @@
                 let v = this.variablesResult
                 this.result = this.snippet.replace(/{{.+?}}/g, function (str, offset, s) {
                     return v[str.slice(2, -2).split('|')[0].trim()] || str
-                })
+                }).replace(/\\{/g, '{').replace(/\\}/g, '}')
             },
             load () {
                 let self = this;
