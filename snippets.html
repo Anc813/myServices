@@ -51,7 +51,7 @@
                 let v = this.variablesResult
                 this.result = this.snippet.replace(/{{.+?}}/g, function (str, offset, s) {
                     return v[str.slice(2, -2).split('|')[0].trim()] || str
-                }).replace(/\\{/g, '{').replace(/\\}/g, '}')
+                })
             },
             load () {
                 let self = this;
