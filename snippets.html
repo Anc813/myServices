@@ -19,7 +19,7 @@
 </div>
 <script type="text/javascript">
     function getVariables(value) {
-        return Object.assign(...( value.match(/{{.+?}}/g) || [])
+        return Object.assign(...( value.match(/{{.+?}}/g) || [''])
             .map(e => e.slice(2, -2).split('|').map(e => (e || '').trim()))
             .map(d => ({[d[0]]: d[1]}))
         )
@@ -54,11 +54,10 @@
                 })
             },
             load () {
-                let self = this;
                 (window.location.href.split('#')[1] || '').split('&')
                     .map(e => (e.includes('=')) ? e.split('=').map(e => decodeURIComponent(e)) : '')
                     .filter(e => e)
-                    .forEach(e => (e[0] == '$snippet') ? self.snippet = e[1] : self.variablesResult[e[0]] = e[1])
+                    .forEach(e => (e[0] == '$snippet') ? this.snippet = e[1] : this.variablesResult[e[0]] = e[1])
             },
             save () {
                 let hash = [['$snippet', this.snippet]];
