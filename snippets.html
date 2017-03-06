@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.1/vue.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <textarea v-model="snippet" cols="60" rows="7" v-on:input="updateResult"></textarea>
+  <br>
+  <div v-for="(value, key) in variables">
+    <label :for="key">{{ key }}</label>
+    <input class="input" type="text" :placeholder="value || key" :id="key" v-model="variablesResult[key]" v-on:input="updateResult">
+    <br>
+  </div>
+  <label for="result">Result</label>
+  <button @click="copyResult">Copy</button>
+  <br>
+  <textarea name="" id="result" cols="60" rows="7" v-model="result"></textarea>
+</div>
+<script type="text/javascript">
+	function getVariables(value) {
+	  let vars = value.match(/{{.+?}}/g) || []
+	  let variables = {}
+	  vars.forEach(e => {
+	    let [name, desc] = e.slice(2, -2).split('|')
+	    name = name.trim()
+	    desc = (desc || '').trim()
+	    variables[name] = desc
+	  })
+	  return variables
+	}
+
+	new Vue({
+	  el: '#app',
+	  created: function() {
+	  	var self = this;
+	  	var hash = location.hash;
+	  	if (hash.length >= 1 && hash[0] == '#') hash = hash.slice(1);
+	  	hash = hash.split('&');
+	    hash = hash
+		    .map(function(e) {
+		    	if (e.indexOf('=') != -1) {
+		    		let [key, value] = e.split('=')
+		    		return [decodeURIComponent(key), decodeURIComponent(value)]
+		    	}
+		    })
+		    .filter(function(e) {return e})
+		    .forEach(function(e) {
+	    		if (e[0] == '$snippet') {
+	    			self.snippet = e[1]
+	    		} else {
+	    			self.variablesResult[e[0]] = e[1]
+	    		}
+		    });
+
+	    this.updateVariables()
+	    this.updateResult()
+	  },
+	  data: {
+	    snippet: 'ssh modom "sudo -u postgres  pg_dump {{ remote db name}} > /tmp/{{ dump file name }}.sql" && scp modom:/tmp/{{ dump file name }}.sql /tmp/{{ dump file name }}.sql && sudo -u postgres dropdb {{ local db name }} && sudo -u postgres createdb -O {{ local db user name|owner }} {{ local db name }} && sudo -u postgres psql {{ local db name }} < /tmp/{{ dump file name }}',
+	    result: 'Hello World!',
+	    variables: {},
+	    variablesResult: {}
+	  },
+	  watch: {
+	    snippet: function(value) {
+	      this.updateVariables();
+	    },
+	  },
+	  methods: {
+	    updateVariables: function() {
+	      this.variables = getVariables(this.snippet);
+	    },
+	    copyResult: function() {
+	      document.querySelector('#result').select()
+	      try {
+	        var successful = document.execCommand('copy');
+	        var msg = successful ? 'successful' : 'unsuccessful';
+	      } catch (err) {
+	        console.log('Oops, unable to copy');
+	      }
+	    },
+	    updateResult: function() {
+	      var hash = [];
+	      for (key in this.variablesResult)
+	        if (key in this.variables) hash.push(encodeURIComponent(key) + '=' + encodeURIComponent(this.variablesResult[key]));
+	      hash.push(encodeURIComponent('$snippet') + '=' + encodeURIComponent(this.snippet))
+	      hash = hash.join('&')
+	      location.hash = hash
+
+	      var v = this.variablesResult;
+	      var result = this.snippet.replace(/{{.+?}}/g, function(str, offset, s) {
+	        let [name, desc] = str.slice(2, -2).split('|')
+	        name = name.trim()
+	        return v[name] || str;
+	      })
+	      this.result = result
+	    }
+	  }
+	});
+
+</script>
+</body>
+</html>
