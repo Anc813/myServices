@@ -1,8 +1,9 @@
 {
   "hosting": {
-    "public": "."
-  },
-  "ignore": [
-    ".idea/**"
-  ]
+    "public": ".",
+    "ignore": [
+      ".idea/**",
+      ".git/**"
+    ]
+  }
 }
