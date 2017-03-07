@@ -16,7 +16,7 @@
             <div v-for="(value, key) in variables" class="pure-control-group">
                 <label :for="key">{{ key }}</label>
                 <input class="input" type="text" :placeholder="value || key" :id="key"
-                       v-model="variablesResult[key]"
+                       v-model.trim="variablesResult[key]"
                        v-on:input="updateResult">
             </div>
             <div class="pure-control-group">
