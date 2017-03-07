@@ -3,19 +3,31 @@
 <head>
     <title></title>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.1/vue.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@0.6.2/build/pure-min.css"
+          integrity="sha384-UQiGfs9ICog+LwheBSRCt1o5cbyKIHbwjWscjemyBMT9YCUMZffs6UqUTd0hObXD" crossorigin="anonymous">
 </head>
 <body>
 <div id="app">
-    <textarea v-model="snippet" cols="60" rows="7" v-on:input="updateVariables"></textarea><br>
-    <div v-for="(value, key) in variables">
-        <label :for="key">{{ key }}</label>
-        <input class="input" type="text" :placeholder="value || key" :id="key" v-model="variablesResult[key]"
-               v-on:input="updateResult"><br>
-    </div>
-    <label for="result">Result</label>
-    <button @click="copyResult">Copy</button>
-    <br>
-    <textarea name="" id="result" cols="60" rows="7" v-model="result"></textarea>
+    <form class="pure-form pure-form-aligned">
+        <fieldset>
+            <div class="pure-control-group">
+                <textarea v-model="snippet" cols="60" rows="7" v-on:input="updateVariables"></textarea>
+            </div>
+            <div v-for="(value, key) in variables" class="pure-control-group">
+                <label :for="key">{{ key }}</label>
+                <input class="input" type="text" :placeholder="value || key" :id="key"
+                       v-model="variablesResult[key]"
+                       v-on:input="updateResult">
+            </div>
+            <div class="pure-control-group">
+                <label for="result">Result</label>
+                <button @click="copyResult" class="pure-button pure-button-primary">Copy</button>
+            </div>
+            <div class="pure-control-group">
+                <textarea name="" id="result" cols="60" rows="7" v-model="result"></textarea>
+            </div>
+        </fieldset>
+    </form>
 </div>
 <script type="text/javascript">
     function getVariables(value) {
