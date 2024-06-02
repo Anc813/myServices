@@ -388,7 +388,7 @@
                 let schedule = SCHEDULES[this.scheduleName];
                 let availabilityMask = parseAvailabilityString(this.availability);
                 this.schedule = schedule.map(value => applyMask(availabilityMask, value))
-                this.availabilityTexts = schedule.map(value => ({
+                this.availabilityTexts = this.schedule.map(value => ({
                     optimistic: parseIntervals(value, true),
                     pessimistic: parseIntervals(value, false)
                 }))
