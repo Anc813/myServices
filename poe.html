@@ -47,6 +47,34 @@
         .odd {
             border-right: 2px solid black;
         }
+
+        .subtable {
+            display: inline-block;
+
+            .subtable-row {
+                background-color: #ffe5ea;
+
+                &.available {
+                    background-color: #cee5b2;
+                }
+
+                span {
+                    display: inline-block;
+
+                    &:nth-child(1) {
+                        width: 80px;
+                    }
+
+                    &:nth-child(2) {
+                        width: 60px;
+                    }
+
+                    &:nth-child(3) {
+                        width: 80px;
+                    }
+                }
+            }
+        }
     </style>
 </head>
 <body>
@@ -135,6 +163,40 @@
                 <td>{{ index + 1 }} черга</td>
                 <td v-html="row.optimistic.join('<br>')"></td>
                 <td v-html="row.pessimistic.join('<br>')"></td>
+            </tr>
+        </table>
+        <br>
+        <h1>Наявність електроенергії (більш детально)</h1>
+        <table>
+            <tr>
+                <th rowspan="2">Номер черги</th>
+            </tr>
+            <tr>
+                <th>при запланованому графіку відключень</th>
+                <th>при вимушеному збільшенні тривалості відключення</th>
+            </tr>
+            <tr v-for="(row, index) in availabilityTextsDetailed" :key="index">
+                <td>{{ index + 1 }} черга</td>
+                <td>
+                    <div class="subtable">
+                        <div v-for="(subrow, subindex) in row.optimistic" :key="index"
+                             :class="['subtable-row', {'available':subrow.isAvailable}]">
+                            <span>{{subrow.period}}</span>
+                            <span>{{ subrow.isAvailable ? "наявна" : "відсутня" }}</span>
+                            <span>({{subrow.durationHours}} годин)</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="subtable">
+                        <div v-for="(subrow, subindex) in row.pessimistic" :key="index"
+                             :class="['subtable-row', {'available':subrow.isAvailable}]">
+                            <span>{{subrow.period}}</span>
+                            <span>{{ subrow.isAvailable ? "наявна" : "відсутня" }}</span>
+                            <span>({{subrow.durationHours}} годин)</span>
+                        </div>
+                    </div>
+                </td>
             </tr>
         </table>
     </div>
@@ -267,7 +329,6 @@
         }
 
         intervalString = mapReplace(intervalString, {'R': '0', 'G': '1'})
-
         const intervals = [];
         let start = null;
 
@@ -319,6 +380,51 @@
 
     function mapReplace(str, map) {
         return str.replace(/./g, m => map[m])
+    }
+
+    function parseAvailability(intervalString, isOptimistic) {
+        if (intervalString.length !== 48) {
+            throw new Error("Input string must be exactly 48 characters long");
+        }
+        let input;
+
+        if (isOptimistic) {
+            input = intervalString.replaceAll('Y', 'G')
+        } else {
+            input = intervalString.replaceAll('Y', 'R')
+        }
+
+        input = mapReplace(input, {'R': '0', 'G': '1'})
+        console.log(input)
+        const intervals = [];
+        let start = 0;
+        let currentStatus = input[0];
+        let startTime = 0;
+
+        for (let i = 1; i <= input.length; i++) {
+            if (input[i] !== currentStatus || i === input.length) {
+                const endTime = i;
+                const startHour = Math.floor(startTime / 2);
+                const startMinute = (startTime % 2) * 30;
+                const endHour = Math.floor(endTime / 2);
+                const endMinute = (endTime % 2) * 30;
+
+                const period = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}-${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+                const durationHours = (endTime - startTime) / 2;
+                const isAvailable = currentStatus === '1';
+
+                intervals.push({
+                    period: period,
+                    isAvailable: isAvailable,
+                    durationHours: durationHours
+                });
+
+                startTime = endTime;
+                currentStatus = input[i];
+            }
+        }
+
+        return intervals;
     }
 
 </script>
@@ -388,11 +494,17 @@
                 let schedule = SCHEDULES[this.scheduleName];
                 let availabilityMask = parseAvailabilityString(this.availability);
                 this.schedule = schedule.map(value => applyMask(availabilityMask, value))
+                console.log(this.schedule[0])
                 this.availabilityTexts = this.schedule.map(value => ({
                     optimistic: parseIntervals(value, true),
                     pessimistic: parseIntervals(value, false)
                 }))
-                console.log(this.schedule, this.availabilityTexts)
+                // console.log(this.schedule, this.availabilityTexts)
+                this.availabilityTextsDetailed = this.schedule.map(value => ({
+                    optimistic: parseAvailability(value, true),
+                    pessimistic: parseAvailability(value, false)
+                }))
+                console.log(this.availabilityTextsDetailed)
             },
         },
 
@@ -402,6 +514,7 @@
                 availability: '',
                 schedule: null,
                 availabilityTexts: null,
+                availabilityTextsDetailed: null,
                 SCHEDULES: SCHEDULES,
             };
         },
