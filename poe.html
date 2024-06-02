@@ -6,7 +6,7 @@
     <title>Electricity Schedule</title>
     <style>
         table {
-            width: 100%;
+            /*width: 100%;*/
             border-collapse: collapse;
         }
 
@@ -75,13 +75,17 @@
                 }
             }
         }
+
+        table.spirale td {
+            border: none;
+        }
     </style>
 </head>
 <body>
 <script type="importmap">
     {
       "imports": {
-        "vue": "https://unpkg.com/vue@3.4.27/dist/vue.esm-browser.js"
+        "vue": "https://unpkg.com/vue@3.4.27/dist/vue.esm-browser.prod.js"
       }
     }
 </script>
@@ -183,7 +187,7 @@
                              :class="['subtable-row', {'available':subrow.isAvailable}]">
                             <span>{{subrow.period}}</span>
                             <span>{{ subrow.isAvailable ? "наявна" : "відсутня" }}</span>
-                            <span>({{subrow.durationHours}} годин)</span>
+                            <span>({{subrow.durationHours}} год.)</span>
                         </div>
                     </div>
                 </td>
@@ -193,9 +197,21 @@
                              :class="['subtable-row', {'available':subrow.isAvailable}]">
                             <span>{{subrow.period}}</span>
                             <span>{{ subrow.isAvailable ? "наявна" : "відсутня" }}</span>
-                            <span>({{subrow.durationHours}} годин)</span>
+                            <span>({{subrow.durationHours}} год.)</span>
                         </div>
                     </div>
+                </td>
+            </tr>
+        </table>
+        <br>
+        <h1>Наявність електроенергії (спіраль)</h1>
+        <table class="spirale">
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td>
+                    <svg :id="'spirale-optimistic-'+index" width="450" height="450"/>
+                </td>
+                <td>
+                    <svg :id="'spirale-pessimistic-'+index" width="450" height="450"/>
                 </td>
             </tr>
         </table>
@@ -395,7 +411,7 @@
         }
 
         input = mapReplace(input, {'R': '0', 'G': '1'})
-        console.log(input)
+        // console.log(input)
         const intervals = [];
         let start = 0;
         let currentStatus = input[0];
@@ -428,7 +444,163 @@
     }
 
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.0.0/d3.min.js"></script>
+<script>
+    // SPIRALE D3
+    const spiralArc = (fromRadius, toRadius, width, fromAngle, toAngle) => {
+        const x1 = fromRadius * Math.sin(fromAngle);
+        const y1 = fromRadius * -Math.cos(fromAngle);
+        const x2 = (fromRadius + width) * Math.sin(fromAngle);
+        const y2 = (fromRadius + width) * -Math.cos(fromAngle);
+        const x3 = toRadius * Math.sin(toAngle);
+        const y3 = toRadius * -Math.cos(toAngle);
+        const x4 = (toRadius + width) * Math.sin(toAngle);
+        const y4 = (toRadius + width) * -Math.cos(toAngle);
+        return `
+    M ${x1},${y1}
+    L ${x2},${y2}
+    A ${fromRadius},${fromRadius} 1 0 1 ${x4},${y4}
+    L ${x3},${y3}
+    A ${fromRadius},${fromRadius} 0 0 0 ${x1},${y1}`;
+    }
 
+    const tick = (fromRadius, toRadius, width, fromAngle, toAngle) => {
+        const x1 = fromRadius * Math.sin(fromAngle);
+        const y1 = fromRadius * -Math.cos(fromAngle);
+        const x2 = (fromRadius + width) * Math.sin(fromAngle);
+        const y2 = (fromRadius + width) * -Math.cos(fromAngle);
+        return `
+    M ${x1},${y1}
+    L ${x2},${y2}`
+    }
+
+    function g_appendText(g, x, y, textContent) {
+        g.append('text')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '-0.4em') // vertical alignment
+            .attr('font-size', '18px')
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(textContent);
+    }
+
+
+    function drawSpirale(selector, data, number, isOptimistic) {
+        const svg = d3.select(`#${selector}`);
+        const g = svg.append('g')
+            .attr('transform', 'translate(225,225)')
+
+        const WIDTH = 45;
+        const BASE_RADIUS = 35;
+        const angle = Math.PI * 2 / 24;
+        for (let index = 0; index < 48; index++) {
+            const fromAngle = angle * index;
+            const toAngle = angle * (index + 1);
+            const fromRadius = BASE_RADIUS + index * 2 + WIDTH;
+            const toRadius = BASE_RADIUS + (index + 1) * 2 + WIDTH;
+            const path = spiralArc(fromRadius, toRadius, WIDTH, fromAngle, toAngle);
+            // const color = data[index] === '1' ? 'rgb(0,255,0)' : 'rgb(255,0,0)'
+            const color = data[index] === '1' ? '#92D050' : 'lightpink'
+
+
+            // const color = `rgb(0,${192 + Math.random() * 64},255)`
+            g.append('path')
+                .attr('d', path)
+                .style('fill', color);
+
+            if (index % 2 == 1) {
+                g.append('path',)
+                    .attr('d', tick(fromRadius, toRadius, ((index % 2 == 0) ? WIDTH : WIDTH / 5), fromAngle, toAngle))
+                    .style('stroke', 'black') // Set the stroke color
+                    .style('stroke-width', '1px'); // Set the stroke width
+            }
+            if (index % 2 == 0) {
+                g.append('path',)
+                    .attr('d', tick(fromRadius, toRadius, WIDTH / 3, fromAngle, toAngle))
+                    .style('stroke', 'black') // Set the stroke color
+                    .style('stroke-width', '2px'); // Set the stroke width
+            }
+
+
+            if (index % 2 == 0) {
+                // Add text at the midpoint of the arc
+                // const midRadius = (fromRadius + toRadius) / 2;
+                const midRadius = fromRadius + WIDTH / 2 + WIDTH * 0.15;
+                // const midAngle = (fromAngle + toAngle) / 2;
+                const midAngle = fromAngle;
+                const textX = midRadius * Math.sin(midAngle);
+                const textY = midRadius * -Math.cos(midAngle);
+
+                // g.append('circle')
+                //     .attr('cx', textX)
+                //     .attr('cy', textY)
+                //     .attr('r', 20) // Adjust the radius to fit your text
+                //     .attr('fill', 'yellow')
+                //     .attr('opacity', 0.7); // Set the opacity to 0.5 for semi-transparency
+                //
+                // g.append('path')
+                //     .attr('cx', textX)
+                //     .attr('cy', textY)
+                //     .attr('r', 20) // Adjust the radius to fit your text
+                //     .attr('fill', 'yellow')
+                //     .attr('opacity', 0.7); // Set the opacity to 0.5 for semi-transparency
+
+                g.append('text')
+                    .attr('x', textX)
+                    .attr('y', textY)
+                    .attr('dy', '0.35em') // vertical alignment
+                    .attr('font-size', '28px')
+                    .attr('font-family', 'sans-serif')
+                    .attr('font-weight', 'bold')
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', 'black')
+                    // .attr('stroke', 'lightyellow') // stroke="deepPink" stroke-width="3px"
+                    // .attr('stroke-width', '1px')
+                    .text(parseInt(index / 2));
+            }
+        }
+
+        g.append('text')
+            .attr('x', 0)
+            .attr('y', -40)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '-0.4em') // vertical alignment
+            .attr('font-size', '32px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(number + ' черга');
+
+        if (isOptimistic) {
+            g_appendText(g, 0, 0, 'при запланованому');
+            g_appendText(g, 0, 20, 'графіку відключень');
+        } else {
+            g_appendText(g, 0, 0, 'при вимушеному');
+            g_appendText(g, 0, 20, 'збільшенні тривалості');
+            g_appendText(g, 0, 40, 'відключення');
+        }
+    }
+
+    function parseSpiraleData(intervalString, isOptimistic) {
+        if (intervalString.length !== 48) {
+            throw new Error("Input string must be exactly 48 characters long");
+        }
+        let input;
+
+        if (isOptimistic) {
+            input = intervalString.replaceAll('Y', 'G')
+        } else {
+            input = intervalString.replaceAll('Y', 'R')
+        }
+
+        return mapReplace(input, {'R': '0', 'G': '1'})
+    }
+
+</script>
 <script type="module">
     import { createApp } from 'vue'
 
@@ -494,7 +666,7 @@
                 let schedule = SCHEDULES[this.scheduleName];
                 let availabilityMask = parseAvailabilityString(this.availability);
                 this.schedule = schedule.map(value => applyMask(availabilityMask, value))
-                console.log(this.schedule[0])
+                // console.log(this.schedule[0])
                 this.availabilityTexts = this.schedule.map(value => ({
                     optimistic: parseIntervals(value, true),
                     pessimistic: parseIntervals(value, false)
@@ -504,7 +676,7 @@
                     optimistic: parseAvailability(value, true),
                     pessimistic: parseAvailability(value, false)
                 }))
-                console.log(this.availabilityTextsDetailed)
+                // console.log(this.availabilityTextsDetailed)
             },
         },
 
@@ -515,12 +687,24 @@
                 schedule: null,
                 availabilityTexts: null,
                 availabilityTextsDetailed: null,
+                spirals: null,
                 SCHEDULES: SCHEDULES,
             };
         },
 
         created() {
             this.makeSchedule()
+        },
+        watch: {
+            schedule(newSchedule, oldSchedule) {
+                console.log('watchschedule', newSchedule)
+
+                newSchedule.forEach((value, index, array) => {
+                    const optimistic= parseSpiraleData(value, true);
+                    drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index +1, true)
+                    drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index +1, false)
+                })
+            }
         }
     }).mount('#app')
 </script>
