@@ -215,6 +215,20 @@
                 </td>
             </tr>
         </table>
+        <br>
+        <h1>Наявність електроенергії (спіраль) для telegram</h1>
+        <table class="spirale">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index">
+                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450"/>
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index">
+                    <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div v-for="item in 6">
@@ -700,9 +714,10 @@
                 console.log('watchschedule', newSchedule)
 
                 newSchedule.forEach((value, index, array) => {
-                    const optimistic= parseSpiraleData(value, true);
-                    drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index +1, true)
-                    drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index +1, false)
+                    const optimistic = parseSpiraleData(value, true);
+                    drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true)
+                    drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true)
+                    drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false)
                 })
             }
         }
