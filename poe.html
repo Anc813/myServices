@@ -137,9 +137,31 @@
                 <td v-html="row.pessimistic.join('<br>')"></td>
             </tr>
         </table>
+    </div>
 
+    <div v-for="item in 6">
+        <h1>Графіки для {{ item }} черги</h1>
+        <table>
+            <tr>
+                <th class="hour">з</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>
+
+            </tr>
+            <tr>
+                <th class="hour">по</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>
+
+            </tr>
+            <tr v-for="(value, name, index) in SCHEDULES">
+                <td>{{ name }}</td>
+                <td v-for="(char, idx) in value[item-1].split('')" :key="idx"
+                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>
+            </tr>
+        </table>
     </div>
 </div>
+
+
 <script>
     function convertDurationString(input) {
         // '2R 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G' -> RRRRRRRYYGGGGGGGRRRYYGGGGGGGRRRYYGGGGGGGRRRYYGGG
@@ -240,8 +262,7 @@
 
         if (isOptimistic) {
             intervalString = intervalString.replaceAll('Y', 'G')
-        }
-        else {
+        } else {
             intervalString = intervalString.replaceAll('Y', 'R')
         }
 
@@ -381,6 +402,7 @@
                 availability: '',
                 schedule: null,
                 availabilityTexts: null,
+                SCHEDULES: SCHEDULES,
             };
         },
 
