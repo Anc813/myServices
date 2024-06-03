@@ -707,18 +707,24 @@
             makeSchedule() {
                 let schedule = SCHEDULES[this.scheduleName];
                 let availabilityMask = parseAvailabilityString(this.availability);
-                this.schedule = schedule.map(value => applyMask(availabilityMask, value))
-                // console.log(this.schedule[0])
-                this.availabilityTexts = this.schedule.map(value => ({
-                    optimistic: parseIntervals(value, true),
-                    pessimistic: parseIntervals(value, false)
-                }))
-                // console.log(this.schedule, this.availabilityTexts)
-                this.availabilityTextsDetailed = this.schedule.map(value => ({
-                    optimistic: parseAvailability(value, true),
-                    pessimistic: parseAvailability(value, false)
-                }))
-                // console.log(this.availabilityTextsDetailed)
+                if (schedule) {
+                    this.schedule = schedule.map(value => applyMask(availabilityMask, value))
+                    // console.log(this.schedule[0])
+                    this.availabilityTexts = this.schedule.map(value => ({
+                        optimistic: parseIntervals(value, true),
+                        pessimistic: parseIntervals(value, false)
+                    }))
+                    // console.log(this.schedule, this.availabilityTexts)
+                    this.availabilityTextsDetailed = this.schedule.map(value => ({
+                        optimistic: parseAvailability(value, true),
+                        pessimistic: parseAvailability(value, false)
+                    }))
+                    // console.log(this.availabilityTextsDetailed)
+                } else {
+                    this.schedule = null
+                    this.availabilityTexts = null
+                    this.availabilityTextsDetailed = null
+                }
             },
         },
 
@@ -739,14 +745,19 @@
         },
         watch: {
             schedule(newSchedule, oldSchedule) {
-                console.log('watchschedule', newSchedule)
+                // console.log('watchschedule', newSchedule)
 
-                newSchedule.forEach((value, index, array) => {
-                    const optimistic = parseSpiraleData(value, true);
-                    drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true)
-                    drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true)
-                    drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false)
-                })
+                if (newSchedule) {
+                    this.$nextTick(() => {
+                        newSchedule.forEach((value, index, array) => {
+                            const optimistic = parseSpiraleData(value, true);
+                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true)
+                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true)
+                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false)
+                        })
+                    });
+
+                }
             }
         }
     }).mount('#app')
