@@ -79,6 +79,10 @@
         table.spirale td {
             border: none;
         }
+
+        .telegram-table .hour {
+            font-size: 32px;
+        }
     </style>
 </head>
 <body>
@@ -152,6 +156,30 @@
             </tr>
             </tbody>
         </table>
+        <br>
+        <h1>Графік для telegram</h1>
+        <table class="telegram-table">
+            <thead>
+            <tr>
+                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>
+                <th colspan="48">Години доби</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td class="hour">{{ index + 1 }}</td>
+                <td v-for="(char, idx) in row.split('')" :key="idx"
+                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>
+            </tr>
+            </tbody>
+        </table>
+
         <br>
         <h1>Наявність електроенергії</h1>
         <table>
@@ -696,7 +724,7 @@
 
         data() {
             return {
-                scheduleName: 'A2',
+                scheduleName: '',
                 availability: '',
                 schedule: null,
                 availabilityTexts: null,
