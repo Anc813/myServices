@@ -113,7 +113,7 @@
                 <option value="C4">C4</option>
             </select>
             <label for="availability">Наявність</label>
-            <input type="text" id="availability" v-model="availability" @change="makeSchedule" style="min-width: 500px;"
+            <input type="text" id="availability" v-model="availability" @change="makeSchedule" style="min-width: 220px;"
                    placeholder="з 00:00 до 5:00 та з 18:00 до 24:00" list="availability-examples">
             <datalist id="availability-examples">
                 <option value="з 00:00 до 5:00 та з 18:00 до 24:00"></option>
@@ -121,6 +121,8 @@
                 <option value="з 18:00 до 23:59"></option>
             </datalist>
 
+            <label for="date">Дата</label>
+            <input type="date" name="date" id="date" v-model="date" @change="makeSchedule">
         </div>
     </div>
 
@@ -529,8 +531,22 @@
             .text(textContent);
     }
 
+    function g_appendDateText(g, x, y, textContent) {
+        g.append('text')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '-0.4em') // vertical alignment
+            .attr('font-size', '20px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(textContent);
+    }
 
-    function drawSpirale(selector, data, number, isOptimistic) {
+
+    function drawSpirale(selector, data, number, isOptimistic, date) {
         const svg = d3.select(`#${selector}`);
         const g = svg.append('g')
             .attr('transform', 'translate(225,225)')
@@ -617,13 +633,20 @@
             .attr('fill', 'black')
             .text(number + ' черга');
 
+        let dateString
+        if (date) {
+            dateString = `${(new Date(date)).toLocaleDateString('uk', {weekday: 'short'})} ${(new Date(date)).toLocaleDateString('uk')}`
+        }
+
         if (isOptimistic) {
             g_appendText(g, 0, 0, 'при запланованому');
             g_appendText(g, 0, 20, 'графіку відключень');
+            dateString && g_appendDateText(g, 0, 45, dateString);
         } else {
             g_appendText(g, 0, 0, 'при вимушеному');
             g_appendText(g, 0, 20, 'збільшенні тривалості');
             g_appendText(g, 0, 40, 'відключення');
+            dateString && g_appendDateText(g, 0, 65 , dateString);
         }
     }
 
@@ -731,6 +754,7 @@
         data() {
             return {
                 scheduleName: '',
+                date: null,
                 availability: '',
                 schedule: null,
                 availabilityTexts: null,
@@ -751,9 +775,9 @@
                     this.$nextTick(() => {
                         newSchedule.forEach((value, index, array) => {
                             const optimistic = parseSpiraleData(value, true);
-                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true)
-                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true)
-                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false)
+                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date)
+                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date)
+                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date)
                         })
                     });
 
