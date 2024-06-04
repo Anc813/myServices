@@ -83,17 +83,6 @@
         .telegram-table .hour {
             font-size: 32px;
         }
-
-        .table-cell {
-            position: relative; /* Make the td a positioned element */
-            /*padding: 20px; !* Optional: Add some padding for better visual *!*/
-        }
-        .overlay-button {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-        }
-
     </style>
 </head>
 <body>
@@ -151,14 +140,12 @@
         <h1>Наявність електроенергії (спіраль) для telegram</h1>
         <table class="spirale">
             <tr>
-                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" class="table-cell" >
-                    <button @click="copySpirale" class="overlay-button">copy</button>
-                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450"/>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
+                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450" />
                 </td>
             </tr>
             <tr>
-                <td v-for="(row, index) in schedule.slice(3)" :key="index" class="table-cell">
-                    <button @click="copySpirale" class="overlay-button">copy</button>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">
                     <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
                 </td>
             </tr>
@@ -272,10 +259,10 @@
         <h1>Наявність електроенергії (спіраль)</h1>
         <table class="spirale">
             <tr v-for="(row, index) in schedule" :key="index">
-                <td>
+                <td @click="copySpirale">
                     <svg :id="'spirale-optimistic-'+index" width="450" height="450"/>
                 </td>
-                <td>
+                <td @click="copySpirale">
                     <svg :id="'spirale-pessimistic-'+index" width="450" height="450"/>
                 </td>
             </tr>
@@ -808,7 +795,7 @@
                 if (matchingRow) this.historyDataValue = matchingRow[0];
             },
             async copySpirale(element) {
-                await convertSvgToPngAndCopy(element.target.nextSibling)
+                await convertSvgToPngAndCopy(element.currentTarget.childNodes[0])
             }
         },
 
