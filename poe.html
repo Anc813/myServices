@@ -83,6 +83,17 @@
         .telegram-table .hour {
             font-size: 32px;
         }
+
+        .table-cell {
+            position: relative; /* Make the td a positioned element */
+            /*padding: 20px; !* Optional: Add some padding for better visual *!*/
+        }
+        .overlay-button {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -94,6 +105,7 @@
     }
 </script>
 
+<canvas id="canvas" style="display:none;"></canvas>
 <div id="app">
     <div class="form-container">
         <div class="input-container" v-if="historyData">
@@ -139,12 +151,14 @@
         <h1>Наявність електроенергії (спіраль) для telegram</h1>
         <table class="spirale">
             <tr>
-                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index">
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" class="table-cell" >
+                    <button @click="copySpirale" class="overlay-button">copy</button>
                     <svg :id="'spirale-optimistic-2-'+index" width="450" height="450"/>
                 </td>
             </tr>
             <tr>
-                <td v-for="(row, index) in schedule.slice(3)" :key="index">
+                <td v-for="(row, index) in schedule.slice(3)" :key="index" class="table-cell">
+                    <button @click="copySpirale" class="overlay-button">copy</button>
                     <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
                 </td>
             </tr>
@@ -495,6 +509,35 @@
     }
 
 </script>
+<script>
+    async function convertSvgToPngAndCopy(svgElement) {
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Create an image element to load the SVG data
+        const img = new Image();
+        img.onload = async function () {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+
+            // Convert the canvas content to a PNG data URL
+            canvas.toBlob(async (blob) => {
+                const item = new ClipboardItem({'image/png': blob});
+                await navigator.clipboard.write([item]);
+                //alert('PNG copied to clipboard!');
+            });
+        };
+        img.src = url
+    }
+
+    // document.getElementById('convertButton').addEventListener('click', convertSvgToPngAndCopy);
+</script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.0.0/d3.min.js"></script>
 <script>
     // SPIRALE D3
@@ -764,6 +807,9 @@
                 const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
                 if (matchingRow) this.historyDataValue = matchingRow[0];
             },
+            async copySpirale(element) {
+                await convertSvgToPngAndCopy(element.target.nextSibling)
+            }
         },
 
         data() {
