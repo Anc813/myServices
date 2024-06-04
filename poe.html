@@ -96,6 +96,13 @@
 
 <div id="app">
     <div class="form-container">
+        <div class="input-container" v-if="historyData">
+            <label for="historyDataValue">Історія</label>
+            <select name="historyDataValue" id="historyDataValue" v-model="historyDataValue">
+                <option value=""></option>
+                <option :value="row[0]" v-for="row in historyData.values">{{row[0]}} {{row[1]}} {{row[2]}}</option>
+            </select>
+        </div>
         <div class="input-container">
             <label for="queueInput">Графік</label>
             <select id="queueInput" @change="makeSchedule" v-model="scheduleName">
@@ -112,7 +119,7 @@
                 <option value="C3">C3</option>
                 <option value="C4">C4</option>
             </select>
-            <label for="availability">Наявність</label>
+            <label for="availability">Застосування</label>
             <input type="text" id="availability" v-model="availability" @change="makeSchedule" style="min-width: 220px;"
                    placeholder="з 00:00 до 5:00 та з 18:00 до 24:00" list="availability-examples">
             <datalist id="availability-examples">
@@ -129,6 +136,20 @@
     <br>
 
     <div v-if="schedule">
+        <h1>Наявність електроенергії (спіраль) для telegram</h1>
+        <table class="spirale">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index">
+                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450"/>
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index">
+                    <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
+
         <h1>Графік</h1>
         <table>
             <thead>
@@ -242,20 +263,6 @@
                 </td>
                 <td>
                     <svg :id="'spirale-pessimistic-'+index" width="450" height="450"/>
-                </td>
-            </tr>
-        </table>
-        <br>
-        <h1>Наявність електроенергії (спіраль) для telegram</h1>
-        <table class="spirale">
-            <tr>
-                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index">
-                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450"/>
-                </td>
-            </tr>
-            <tr>
-                <td v-for="(row, index) in schedule.slice(3)" :key="index">
-                    <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
                 </td>
             </tr>
         </table>
@@ -548,6 +555,7 @@
 
     function drawSpirale(selector, data, number, isOptimistic, date) {
         const svg = d3.select(`#${selector}`);
+        svg.html('');
         const g = svg.append('g')
             .attr('transform', 'translate(225,225)')
 
@@ -646,7 +654,7 @@
             g_appendText(g, 0, 0, 'при вимушеному');
             g_appendText(g, 0, 20, 'збільшенні тривалості');
             g_appendText(g, 0, 40, 'відключення');
-            dateString && g_appendDateText(g, 0, 65 , dateString);
+            dateString && g_appendDateText(g, 0, 65, dateString);
         }
     }
 
@@ -749,6 +757,13 @@
                     this.availabilityTextsDetailed = null
                 }
             },
+            async loadHistoryData() {
+                this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
+                console.log('historyData', this.historyData)
+                const currentDate = (new Date()).toLocaleDateString();
+                const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
+                if (matchingRow) this.historyDataValue = matchingRow[0];
+            },
         },
 
         data() {
@@ -761,11 +776,15 @@
                 availabilityTextsDetailed: null,
                 spirals: null,
                 SCHEDULES: SCHEDULES,
+                historyData: null,
+                historyDataValue: '',
+
             };
         },
 
         created() {
             this.makeSchedule()
+            this.loadHistoryData()
         },
         watch: {
             schedule(newSchedule, oldSchedule) {
@@ -781,6 +800,25 @@
                         })
                     });
 
+                }
+            },
+            historyDataValue(newhistoryDataValue, oldhistoryDataValue) {
+                const matchingRow = this.historyData.values.find(row => row[0] == newhistoryDataValue);
+                if (matchingRow) {
+                    this.scheduleName = matchingRow[1]
+
+                    const [day, month, year] = matchingRow[0].split('.');
+
+                    this.date = `${year}-${month}-${day}`
+                    this.availability = matchingRow[2]
+
+                    console.log('HHERERER')
+                    this.makeSchedule()
+                } else {
+                    this.scheduleName = ''
+                    this.date = ''
+                    this.availability = ''
+                    this.makeSchedule()
                 }
             }
         }
