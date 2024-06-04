@@ -134,8 +134,6 @@
         </div>
     </div>
 
-    <br>
-
     <div v-if="schedule">
         <h1>Наявність електроенергії (спіраль) для telegram</h1>
         <table class="spirale">
@@ -510,6 +508,8 @@
         img.onload = async function () {
             canvas.width = img.width;
             canvas.height = img.height;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0);
 
             // Convert the canvas content to a PNG data URL
@@ -583,7 +583,7 @@
     }
 
 
-    function drawSpirale(selector, data, number, isOptimistic, date) {
+    function drawSpirale(selector, data, number, isOptimistic, date, scheduleName) {
         const svg = d3.select(`#${selector}`);
         svg.html('');
         const g = svg.append('g')
@@ -686,6 +686,19 @@
             g_appendText(g, 0, 40, 'відключення');
             dateString && g_appendDateText(g, 0, 65, dateString);
         }
+
+        g.append('text')
+            .attr('x', 0)
+            .attr('y', 85)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '0em') // vertical alignment
+            .attr('font-size', '20px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(scheduleName);
+
     }
 
     function parseSpiraleData(intervalString, isOptimistic) {
@@ -789,7 +802,6 @@
             },
             async loadHistoryData() {
                 this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
-                console.log('historyData', this.historyData)
                 const currentDate = (new Date()).toLocaleDateString();
                 const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
                 if (matchingRow) this.historyDataValue = matchingRow[0];
@@ -827,9 +839,9 @@
                     this.$nextTick(() => {
                         newSchedule.forEach((value, index, array) => {
                             const optimistic = parseSpiraleData(value, true);
-                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date)
-                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date)
-                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date)
+                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
+                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
+                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date, this.scheduleName)
                         })
                     });
 
