@@ -19,6 +19,8 @@ server {
         try_files $uri $uri/ =404;
     }
 
+
+
     # Enable gzip compression
     gzip on;
     gzip_types text/plain application/json application/javascript text/css application/xml text/javascript;
@@ -28,12 +30,19 @@ server {
 
 
         location /poe.json {
-            proxy_pass https://sheets.googleapis.com/v4/spreadsheets/1Xt-dwZdprhsuVrvFuq-GrBgGws-HFMBCT_UBdoCE-ks/values/API!A1:C1000?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&key=AIzaSyAw6PloH_YgHPl95vPc_NEeQqgUIrtnnJU;
+            proxy_pass https://sheets.googleapis.com/v4/spreadsheets/1Xt-dwZdprhsuVrvFuq-GrBgGws-HFMBCT_UBdoCE-ks/values/API!A1:C30?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&key=AIzaSyAw6PloH_YgHPl95vPc_NEeQqgUIrtnnJU;
             proxy_set_header Accept-Encoding "";  # Disable gzip to ensure caching
             proxy_cache my_cache;
             proxy_cache_valid 200 10m;  # Cache response for 10 minutes
             proxy_cache_use_stale error timeout invalid_header updating http_500 http_502 http_503 http_504;
             add_header X-Proxy-Cache $upstream_cache_status;
+            # Add CORS headers
+	    proxy_hide_header 'Access-Control-Allow-Origin';
+
+            add_header 'Access-Control-Allow-Origin' '*' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+            add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+            add_header 'Access-Control-Expose-Headers' 'Content-Length,Content-Range';
 
             # Optionally, you can add more proxy settings here
             proxy_http_version 1.1;
@@ -64,6 +73,5 @@ server {
 
 
 }
-
 
 ```
