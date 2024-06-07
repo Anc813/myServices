@@ -131,6 +131,8 @@
 
             <label for="date">Дата</label>
             <input type="date" name="date" id="date" v-model="date" @change="makeSchedule">
+            <label for="rule">Rule</label>
+            <input type="text" name="rule" id="rule" v-model="rule" @change="makeSchedule">
         </div>
     </div>
 
@@ -493,6 +495,77 @@
         return intervals;
     }
 
+    function parseScheduleSImple(scheduleStr) {
+        //  "0-NA, 5-B1, 7.5-B2, 11.5-B3, 16.5-B2, 20-NA";
+        // Split the string by commas to get individual schedule entries
+        const entries = scheduleStr.split(', ');
+
+        // Initialize the schedule array with 'NA' for 48 half-hour intervals
+        const schedule = Array(48).fill('NA');
+
+        // Define a helper function to convert fractional hours to interval indices
+        function timeToIndex(time) {
+            return Math.floor(time * 2);
+        }
+
+        // Process each entry in the schedule string
+        entries.forEach(entry => {
+            const [timeStr, graph] = entry.split('-');
+            const time = parseFloat(timeStr);
+            const startIndex = timeToIndex(time);
+
+            // Determine the end index based on the next time entry or the end of the day
+            const nextEntry = entries.find(e => parseFloat(e.split('-')[0]) > time);
+            const endIndex = nextEntry ? timeToIndex(parseFloat(nextEntry.split('-')[0])) : 48;
+
+            // Fill the schedule array with the graph for the corresponding intervals
+            for (let i = startIndex; i < endIndex; i++) {
+                schedule[i] = graph;
+            }
+        });
+
+        return schedule;
+    }
+
+    function parseSchedule(scheduleStr) {
+        // 5-B1, 7-B2, 11.5-B3, 16.5-B2
+        // 5-B1,16-NA,24-B1
+        // 0-B1,5-NA,16-B1
+        //  0-NA, 5-B1, 7.5-B2, 11.5-B3, 16.5-B2, 20-NA;
+        // Initialize the schedule array with 'NA' for 48 half-hour intervals
+        const schedule = Array(48).fill('NA');
+
+        // Regular expression to match the pattern of "time-graph"
+        const regex = /(\d+(?:\.\d+)?)-(B[1-4]?|NA?)/g;
+        let match;
+        const entries = [];
+
+        // Process each match in the schedule string
+        while ((match = regex.exec(scheduleStr)) !== null) {
+            const time = parseFloat(match[1]);
+            const graph = match[2] || 'NA';
+            entries.push({ time, graph });
+        }
+
+        // Sort entries by time
+        entries.sort((a, b) => a.time - b.time);
+
+        // Fill the schedule array based on parsed entries
+        for (let i = 0; i < entries.length; i++) {
+            const startTime = entries[i].time;
+            const graph = entries[i].graph;
+            const startIndex = Math.floor(startTime * 2);
+
+            const endIndex = (i + 1 < entries.length) ?
+                Math.floor(entries[i + 1].time * 2) : 48;
+
+            for (let j = startIndex; j < endIndex; j++) {
+                schedule[j] = graph;
+            }
+        }
+
+        return schedule;
+    }
 </script>
 <script>
     async function convertSvgToPngAndCopy(svgElement) {
@@ -779,11 +852,20 @@
                 return value.toString().padStart(2, '0');
             },
             makeSchedule() {
-                let schedule = SCHEDULES[this.scheduleName];
-                let availabilityMask = parseAvailabilityString(this.availability);
+                let schedule;
+                if (this.rule) {
+                    let parsedSchedule = parseSchedule(this.rule)
+                    schedule = SCHEDULES.A1.map((_, idx) => parsedSchedule.map((e, index) => (e === 'NA' ? 'G' : SCHEDULES[e][idx][index])).join(''))
+                } else {
+                    schedule = SCHEDULES[this.scheduleName]
+                    if (schedule) {
+                        let availabilityMask = parseAvailabilityString(this.availability);
+                        schedule = SCHEDULES[this.scheduleName].map(value => applyMask(availabilityMask, value));
+                    }
+                }
+
                 if (schedule) {
-                    this.schedule = schedule.map(value => applyMask(availabilityMask, value))
-                    // console.log(this.schedule[0])
+                    this.schedule = schedule;
                     this.availabilityTexts = this.schedule.map(value => ({
                         optimistic: parseIntervals(value, true),
                         pessimistic: parseIntervals(value, false)
@@ -801,8 +883,10 @@
                 }
             },
             async loadHistoryData() {
-                this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
+                // this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
+                this.historyData = await (await fetch('https://sheets.googleapis.com/v4/spreadsheets/1Xt-dwZdprhsuVrvFuq-GrBgGws-HFMBCT_UBdoCE-ks/values/API!A1:D30?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&key=AIzaSyAw6PloH_YgHPl95vPc_NEeQqgUIrtnnJU')).json()
                 const currentDate = (new Date()).toLocaleDateString();
+                console.log(this.historyData)
                 const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
                 if (matchingRow) this.historyDataValue = matchingRow[0];
             },
@@ -823,7 +907,7 @@
                 SCHEDULES: SCHEDULES,
                 historyData: null,
                 historyDataValue: '',
-
+                rule: '',
             };
         },
 
@@ -856,12 +940,14 @@
 
                     this.date = `${year}-${month}-${day}`
                     this.availability = matchingRow[2]
+                    this.rule = matchingRow[3]
 
                     this.makeSchedule()
                 } else {
                     this.scheduleName = ''
                     this.date = ''
                     this.availability = ''
+                    this.rule = ''
                     this.makeSchedule()
                 }
             }
