@@ -883,8 +883,7 @@
                 }
             },
             async loadHistoryData() {
-                // this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
-                this.historyData = await (await fetch('https://sheets.googleapis.com/v4/spreadsheets/1Xt-dwZdprhsuVrvFuq-GrBgGws-HFMBCT_UBdoCE-ks/values/API!A1:D30?majorDimension=ROWS&valueRenderOption=FORMATTED_VALUE&key=AIzaSyAw6PloH_YgHPl95vPc_NEeQqgUIrtnnJU')).json()
+                this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
                 const currentDate = (new Date()).toLocaleDateString();
                 console.log(this.historyData)
                 const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
