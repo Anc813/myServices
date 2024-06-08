@@ -151,6 +151,20 @@
             </tr>
         </table>
 
+        <h1>Наявність електроенергії (спіраль) для telegram</h1>
+        <table class="spirale">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
+                    <svg :id="'spirale-3-'+index" width="450" height="450" />
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">
+                    <svg :id="'spirale-3-'+(index+3)" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
+
         <h1>Графік</h1>
         <table>
             <thead>
@@ -264,6 +278,9 @@
                 </td>
                 <td @click="copySpirale">
                     <svg :id="'spirale-pessimistic-'+index" width="450" height="450"/>
+                </td>
+                <td @click="copySpirale">
+                    <svg :id="'spirale-'+index" width="450" height="450"/>
                 </td>
             </tr>
         </table>
@@ -672,8 +689,11 @@
             const toRadius = BASE_RADIUS + (index + 1) * 2 + WIDTH;
             const path = spiralArc(fromRadius, toRadius, WIDTH, fromAngle, toAngle);
             // const color = data[index] === '1' ? 'rgb(0,255,0)' : 'rgb(255,0,0)'
-            const color = data[index] === '1' ? '#92D050' : 'lightpink'
-
+            const color = {
+                'G': '#92D050',
+                'R': 'lightpink',
+                'Y': '#C9CE71'
+            }[data[index]]
 
             // const color = `rgb(0,${192 + Math.random() * 64},255)`
             g.append('path')
@@ -749,15 +769,17 @@
             dateString = `${(new Date(date)).toLocaleDateString('uk', {weekday: 'short'})} ${(new Date(date)).toLocaleDateString('uk')}`
         }
 
-        if (isOptimistic) {
+        if (isOptimistic === true) {
             g_appendText(g, 0, 0, 'при запланованому');
             g_appendText(g, 0, 20, 'графіку відключень');
             dateString && g_appendDateText(g, 0, 45, dateString);
-        } else {
+        } else if (isOptimistic === false) {
             g_appendText(g, 0, 0, 'при вимушеному');
             g_appendText(g, 0, 20, 'збільшенні тривалості');
             g_appendText(g, 0, 40, 'відключення');
             dateString && g_appendDateText(g, 0, 65, dateString);
+        } else {
+            dateString && g_appendDateText(g, 0, 25, dateString);
         }
 
         g.append('text')
@@ -785,8 +807,8 @@
         } else {
             input = intervalString.replaceAll('Y', 'R')
         }
-
-        return mapReplace(input, {'R': '0', 'G': '1'})
+        return input
+        // return mapReplace(input, {'R': '0', 'G': '1'})
     }
 
 </script>
@@ -924,6 +946,8 @@
                             const optimistic = parseSpiraleData(value, true);
                             drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
                             drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
+                            drawSpirale(`spirale-3-${index}`, value, index + 1, undefined, this.date, this.scheduleName)
+                            drawSpirale(`spirale-${index}`, value, index + 1, undefined, this.date, this.scheduleName)
                             drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date, this.scheduleName)
                         })
                     });
