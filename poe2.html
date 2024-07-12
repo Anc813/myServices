@@ -96,7 +96,7 @@
 
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="app">
-    <div class="form-container">
+    <div class="form-container" v-show="showAll">
         <div class="input-container" v-if="historyData">
             <label for="historyDataValue">Історія</label>
             <select name="historyDataValue" id="historyDataValue" v-model="historyDataValue">
@@ -141,7 +141,7 @@
 
     <div v-if="schedule">
 
-        <h1>Наявність електроенергії (спіраль) для telegram</h1>
+        <h1 v-show="showAll">Наявність електроенергії (спіраль) для telegram</h1>
         <table class="spirale">
             <tr>
                 <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
@@ -154,6 +154,9 @@
                 </td>
             </tr>
         </table>
+    </div>
+
+    <div v-if="schedule" v-show="showAll">
 
         <h1>Наявність електроенергії (спіраль) для telegram</h1>
         <table class="spirale">
@@ -290,7 +293,7 @@
         </table>
     </div>
 
-    <div v-for="item in 6">
+    <div v-for="item in 6" v-show="showAll">
         <h1>Графіки для {{ item }} черги</h1>
         <table>
             <tr>
@@ -677,7 +680,7 @@
     }
 
 
-    function drawSpirale(selector, data, number, isOptimistic, date, scheduleName) {
+    function drawSpirale(selector, data, number, isOptimistic, date, scheduleName, total) {
         // https://stackoverflow.com/a/68149618
         const svg = d3.select(`#${selector}`);
         svg.html('');
@@ -787,18 +790,34 @@
             dateString && g_appendDateText(g, 0, 25, dateString);
         }
 
-        g.append('text')
-            .attr('x', 0)
-            .attr('y', 85)
-            .attr('dy', '0.35em') // vertical alignment
-            .attr('dx', '0em') // vertical alignment
-            .attr('font-size', '20px')
-            .attr('font-family', 'sans-serif')
-            .attr('font-weight', 'bold')
-            .attr('text-anchor', 'middle')
-            .attr('fill', 'black')
-            .text(scheduleName);
+        // g.append('text')
+        //     .attr('x', 0)
+        //     .attr('y', 85)
+        //     .attr('dy', '0.35em') // vertical alignment
+        //     .attr('dx', '0em') // vertical alignment
+        //     .attr('font-size', '20px')
+        //     .attr('font-family', 'sans-serif')
+        //     .attr('font-weight', 'bold')
+        //     .attr('text-anchor', 'middle')
+        //     .attr('fill', 'black')
+        //     .text(scheduleName);
 
+        if (total) {
+            g.append('text')
+                .attr('x', -7)
+                .attr('y', 75)
+                .attr('dy', '0.35em') // vertical alignment
+                .attr('dx', '0em') // vertical alignment
+                .attr('font-size', '25px')
+                .attr('font-family', 'sans-serif')
+                .attr('font-weight', 'bold')
+                .attr('text-anchor', 'middle')
+                .append('tspan').attr('fill', '#83BA48').text(  '+' + ((data.match(/G/g) || []).length /2).toString())
+                // .append('tspan').attr('fill', 'darkgrey').text('/')
+                .append('tspan').attr('fill', '#DB9DA8').text(' -' + ((data.match(/R/g) || []).length / 2).toString())
+                // .attr('fill', 'black')
+                // .text(scheduleName);
+        }
     }
 
     function parseSpiraleData(intervalString, isOptimistic) {
@@ -892,7 +911,8 @@
             makeSchedule() {
                 let schedule;
                 if (this.rule) {
-                    let parsedSchedule = parseSchedule(this.rule)
+                    let rule = this.rule.toUpperCase().replaceAll('А', 'A').replaceAll('В', 'B').replaceAll('С', 'C');
+                    let parsedSchedule = parseSchedule(rule)
                     schedule = SCHEDULES.A1.map((_, idx) => parsedSchedule.map((e, index) => (e === 'NA' ? 'G' : SCHEDULES[e][idx][index])).join(''))
                 } else {
                     schedule = SCHEDULES[this.scheduleName]
@@ -922,7 +942,19 @@
             },
             async loadHistoryData() {
                 this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
-                const currentDate = (new Date()).toLocaleDateString();
+                const urlParams = new URLSearchParams(window.location.search);
+                let currentDate = new Date();
+                if (urlParams.has('tomorrow')) {
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                if (urlParams.has('hide')) {
+                    this.showAll = false;
+                }
+                if (urlParams.has('total')) {
+                    this.total = true;
+                }
+                currentDate = currentDate.toLocaleDateString();
+
                 console.log(this.historyData)
                 const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
                 if (matchingRow) this.historyDataValue = matchingRow[0];
@@ -945,6 +977,8 @@
                 historyData: null,
                 historyDataValue: '',
                 rule: '',
+                showAll: true,
+                total: false
             };
         },
 
@@ -960,11 +994,11 @@
                     this.$nextTick(() => {
                         newSchedule.forEach((value, index, array) => {
                             const optimistic = parseSpiraleData(value, true);
-                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
-                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
-                            drawSpirale(`spirale-3-${index}`, value, index + 1, undefined, this.date, this.scheduleName)
-                            drawSpirale(`spirale-${index}`, value, index + 1, undefined, this.date, this.scheduleName)
-                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date, this.scheduleName)
+                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName, this.total)
+                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName, this.total)
+                            drawSpirale(`spirale-3-${index}`, value, index + 1, undefined, this.date, this.scheduleName, this.total)
+                            drawSpirale(`spirale-${index}`, value, index + 1, undefined, this.date, this.scheduleName, this.total)
+                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date, this.scheduleName, this.total)
                         })
                     });
 
