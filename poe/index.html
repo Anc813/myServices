@@ -114,9 +114,7 @@
                 </td>
             </tr>
         </table>
-    </div>
 
-    <div v-if="schedule">
         <h1>Точно як у Полтаваобленерго</h1>
         <table class="spirale">
             <tr>
@@ -129,6 +127,59 @@
                     <svg :id="'spirale-3-'+(index+3)" width="450" height="450"/>
                 </td>
             </tr>
+        </table>
+
+        <h1>Графік</h1>
+        <table>
+            <thead>
+            <tr>
+                <th rowspan="3">Номер черги</th>
+                <!--        <th colspan="2">Електроенергія наявна</th>-->
+                <th colspan="49">Години доби</th>
+            </tr>
+            <tr>
+                <!--        <th rowspan="2">при запланованому графіку відключень</th>-->
+                <!--        <th rowspan="2">при вимушеному збільшенні тривалості відключення</th>-->
+                <th class="hour">з</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>
+            </tr>
+            <tr>
+                <th class="hour">по</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td colspan="2">{{ index + 1 }} черга</td>
+                <!--        <td>{{ row.planned }}</td>-->
+                <!--        <td>{{ row.forced }}</td>-->
+                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
+                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <h1>Компактний графік</h1>
+        <table class="telegram-table">
+            <thead>
+            <tr>
+                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>
+                <th colspan="48">Години доби</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td class="hour">{{ index + 1 }}</td>
+                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
+                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>
+            </tr>
+            </tbody>
         </table>
     </div>
 </div>
@@ -544,11 +595,6 @@
             }
 
             await this.makeSchedule()
-            // this.date = new Date();
-            // this.dateString = this.date.toISOString();
-            // this.makeSchedule()
-            // this.loadHistoryData()
-
         },
         watch: {
             date (newDate, oldDate) {
