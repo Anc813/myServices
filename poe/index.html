@@ -98,6 +98,8 @@
 <div id="app">
     <div class="form-container">
        <input type="date" @change="makeSchedule" v-model="date">
+       <a style="margin-left: 1em;" href=".?tomorrow">Завтра</a>
+       <a style="margin-left: 1em; color:darkgrey;" href="https://www.poe.pl.ua/disconnection/power-outages/">Дані з полтаваоблнерго</a>
     </div>
 
     <div v-if="schedule">
@@ -569,7 +571,7 @@
         data() {
             return {
                 // scheduleName: '',
-                date: (new Date()).toISOString().substring(0, 10),
+                date: '2000-12-31',
                 // dateString: (new Date()).toISOString(),
                 // availability: '',
                 schedule: null,
@@ -588,11 +590,13 @@
         async created() {
             const urlParams = new URLSearchParams(window.location.search);
 
+            let date = new Date()
+            date = new Date(date - date.getTimezoneOffset() * 60000)
+
             if (urlParams.has('tomorrow')) {
-                let tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                this.date = tomorrow.toISOString().substring(0, 10)
+                date.setDate(date.getDate() + 1);
             }
+            this.date = date.toISOString().substring(0, 10)
 
             await this.makeSchedule()
         },
