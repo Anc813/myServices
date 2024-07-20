@@ -93,6 +93,7 @@
       }
     }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="app">
@@ -141,8 +142,8 @@
 
     <div v-if="schedule">
 
-        <h1 v-show="showAll">Наявність електроенергії (спіраль) для telegram</h1>
-        <table class="spirale">
+        <h1 v-show="showAll">Наявність електроенергії (спіраль) для telegram спрощено <button style="vertical-align: middle;" @click="myCopy('#chart-optimistic-2', $event)">Копіювати</button></h1>
+        <table class="spirale" id="chart-optimistic-2">
             <tr>
                 <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
                     <svg :id="'spirale-optimistic-2-'+index" width="450" height="450" />
@@ -158,8 +159,8 @@
 
     <div v-if="schedule" v-show="showAll">
 
-        <h1>Наявність електроенергії (спіраль) для telegram</h1>
-        <table class="spirale">
+        <h1>Наявність електроенергії (спіраль) для telegram <button style="vertical-align: middle;" @click="myCopy('#chart-spirale-3', $event)">Копіювати</button></h1>
+        <table class="spirale" id="chart-spirale-3">
             <tr>
                 <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
                     <svg :id="'spirale-3-'+index" width="450" height="450" />
@@ -961,6 +962,20 @@
             },
             async copySpirale(element) {
                 await convertSvgToPngAndCopy(element.currentTarget.childNodes[0])
+            },
+            myCopy(selector, event) {
+                event.target.innerText = 'Зачекайте'
+                setTimeout(() => {
+                    html2canvas(document.querySelector(selector)).then(sourceCanvas => {
+                        sourceCanvas.toBlob(async (blob) => {
+                            const item = new ClipboardItem({'image/png': blob});
+                            await navigator.clipboard.write([item]);
+                            event.target.innerText = 'Скопійовано'
+                            setTimeout(() => {event.target.innerText = 'Копіювати'}, 2000)
+                        });
+                    });
+
+                }, 10)
             }
         },
 

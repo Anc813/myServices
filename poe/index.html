@@ -93,6 +93,7 @@
       }
     }
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="app">
@@ -100,11 +101,12 @@
        <input type="date" @change="makeSchedule" v-model="date">
        <a style="margin-left: 1em;" href=".?tomorrow">Завтра</a>
        <a style="margin-left: 1em; color:darkgrey;" href="https://www.poe.pl.ua/disconnection/power-outages/">Дані з полтаваоблнерго</a>
+
     </div>
 
     <div v-if="schedule">
-        <h1>Без півгодин</h1>
-        <table class="spirale">
+        <h1>Без півгодин <button style="vertical-align: middle;" @click="myCopy('#spirale-no-hh', $event)">Копіювати</button></h1>
+        <table class="spirale" id="spirale-no-hh">
             <tr>
                 <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
                     <svg :id="'spirale-optimistic-2-'+index" width="450" height="450" />
@@ -117,8 +119,8 @@
             </tr>
         </table>
 
-        <h1>Точно як у Полтаваобленерго</h1>
-        <table class="spirale">
+        <h1>Точно як у Полтаваобленерго <button style="vertical-align: middle;" @click="myCopy('#spirale', $event)">Копіювати</button></h1>
+        <table class="spirale" id="spirale">
             <tr>
                 <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
                     <svg :id="'spirale-3-'+index" width="450" height="450" />
@@ -131,8 +133,8 @@
             </tr>
         </table>
 
-        <h1>Графік</h1>
-        <table>
+        <h1>Графік <button style="vertical-align: middle;" @click="myCopy('#table-1', $event)">Копіювати</button></h1>
+        <table id="table-1">
             <thead>
             <tr>
                 <th rowspan="3">Номер черги</th>
@@ -161,8 +163,8 @@
             </tbody>
         </table>
         <br>
-        <h1>Компактний графік</h1>
-        <table class="telegram-table">
+        <h1>Компактний графік <button style="vertical-align: middle;" @click="myCopy('#table-2', $event)">Копіювати</button></h1>
+        <table class="telegram-table" id="table-2">
             <thead>
             <tr>
                 <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>
@@ -565,6 +567,21 @@
             },
             async copySpirale(element) {
                 await convertSvgToPngAndCopy(element.currentTarget.childNodes[0])
+            },
+
+            myCopy(selector, event) {
+                event.target.innerText = 'Зачекайте'
+                setTimeout(() => {
+                    html2canvas(document.querySelector(selector)).then(sourceCanvas => {
+                        sourceCanvas.toBlob(async (blob) => {
+                            const item = new ClipboardItem({'image/png': blob});
+                            await navigator.clipboard.write([item]);
+                            event.target.innerText = 'Скопійовано'
+                            setTimeout(() => {event.target.innerText = 'Копіювати'}, 2000)
+                        });
+                    });
+
+                }, 10)
             }
         },
 
