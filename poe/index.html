@@ -453,7 +453,7 @@
         schedules.push(schedule);
       });
 
-      console.log(schedules)
+      // console.log(schedules)
       return schedules;
     }
     function mapReplace(str, map) {
@@ -465,7 +465,7 @@
             throw new Error("Input string must be exactly 48 characters long");
         }
         let input;
-        console.log(input)
+
         if (isOptimistic) {
             input = intervalString.match(/.{2}/g).map(pair => pair === '01' ? '11' : pair).join('');
             // input = intervalString.replaceAll('Y', 'G')
@@ -491,7 +491,7 @@
                 const url = 'https://www.poe.pl.ua/customs/grafik-info.php'
 
                 // 2024-07-19 -> 19-07-2024
-                console.log(this, this.date)
+
                 const newDate = `${this.date.slice(8,10)}-${this.date.slice(5, 7)}-${this.date.slice(0, 4)}`
                 const formData = new FormData()
                 formData.append('seldate', JSON.stringify({"date_in":newDate}));
@@ -512,7 +512,6 @@
                 }
             },
             async makeSchedule() {
-                console.log(this.date)
                 let data = await this.fetchHTML()
                 this.schedule = parseSchedule(data)
                 return
@@ -546,25 +545,6 @@
                     this.availabilityTexts = null
                     this.availabilityTextsDetailed = null
                 }
-            },
-            async loadHistoryData() {
-                this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
-                const urlParams = new URLSearchParams(window.location.search);
-                let currentDate = new Date();
-                if (urlParams.has('tomorrow')) {
-                    currentDate.setDate(currentDate.getDate() + 1);
-                }
-                if (urlParams.has('hide')) {
-                    this.showAll = false;
-                }
-                if (urlParams.has('total')) {
-                    this.total = true;
-                }
-                currentDate = currentDate.toLocaleDateString();
-
-                console.log(this.historyData)
-                const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
-                if (matchingRow) this.historyDataValue = matchingRow[0];
             },
             async copySpirale(element) {
                 await convertSvgToPngAndCopy(element.currentTarget.childNodes[0])
@@ -621,17 +601,13 @@
             await this.makeSchedule()
         },
         watch: {
-            date (newDate, oldDate) {
-                console.log('watch date', newDate, oldDate)
-            },
-            schedule(newSchedule, oldSchedule) {
+           schedule(newSchedule, oldSchedule) {
                 // console.log('watchschedule', newSchedule)
 
                 if (newSchedule) {
                     this.$nextTick(() => {
                         newSchedule.forEach((value, index, array) => {
                             const optimistic = parseSpiraleData(value, true);
-                            console.log('optimistic', optimistic)
                             // const optimistic = value;
                             // drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this)
                             drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this)
