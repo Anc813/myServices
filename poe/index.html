@@ -99,7 +99,8 @@
 <div id="app">
     <div class="form-container">
        <input type="date" @change="makeSchedule" v-model="date">
-       <a style="margin-left: 1em;" href=".?tomorrow">Завтра</a>
+       <a v-if="!tomorrow"  style="margin-left: 1em;" href=".?tomorrow">Завтра</a>
+       <a v-if="tomorrow"  style="margin-left: 1em;" href=".">Сьогодні</a>
        <a style="margin-left: 1em; color:darkgrey;" href="https://www.poe.pl.ua/disconnection/power-outages/">Дані з полтаваоблнерго</a>
 
     </div>
@@ -600,7 +601,8 @@
                 // historyDataValue: '',
                 // rule: '',
                 // showAll: true,
-                total: false
+                total: false,
+                tomorrow: false
             };
         },
 
@@ -612,6 +614,7 @@
 
             if (urlParams.has('tomorrow')) {
                 date.setDate(date.getDate() + 1);
+                this.tomorrow = true
             }
             this.date = date.toISOString().substring(0, 10)
 
