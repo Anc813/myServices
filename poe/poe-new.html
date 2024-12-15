@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Schedule</title>
+    <style>
+        table {
+            /*width: 100%;*/
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #000;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .G {
+            background-color: #92D050;
+        }
+
+        .R {
+            background-color: lightpink;
+        }
+
+        .Y {
+            background-color: lightyellow;
+        }
+
+        body {
+            font-family: "Arial Narrow";
+        }
+
+        .hour {
+            background-color: #E8E8E8;
+            padding: 1px;
+            border-left: 2px solid black;
+            border-right: 2px solid black;
+
+        }
+
+        .even {
+            border-left: 2px solid black;
+        }
+
+        .odd {
+            border-right: 2px solid black;
+        }
+
+        .subtable {
+            display: inline-block;
+
+            .subtable-row {
+                background-color: #ffe5ea;
+
+                &.available {
+                    background-color: #cee5b2;
+                }
+
+                span {
+                    display: inline-block;
+
+                    &:nth-child(1) {
+                        width: 80px;
+                    }
+
+                    &:nth-child(2) {
+                        width: 60px;
+                    }
+
+                    &:nth-child(3) {
+                        width: 80px;
+                    }
+                }
+            }
+        }
+
+        table.spirale td {
+            border: none;
+        }
+
+        .telegram-table .hour {
+            font-size: 32px;
+        }
+    </style>
+</head>
+<body>
+<script type="importmap">
+    {
+      "imports": {
+        "vue": "https://unpkg.com/vue@3.4.27/dist/vue.esm-browser.prod.js"
+      }
+    }
+</script>
+
+<canvas id="canvas" style="display:none;"></canvas>
+<div id="app">
+    <div class="form-container">
+        <div class="input-container" v-if="historyData">
+            <label for="historyDataValue">Історія</label>
+            <select name="historyDataValue" id="historyDataValue" v-model="historyDataValue">
+                <option value=""></option>
+                <option :value="row[0]" v-for="row in historyData.values">{{row[0]}} {{row[1]}} {{row[2]}}</option>
+            </select>
+        </div>
+        <div class="input-container">
+            <label for="queueInput">Графік</label>
+            <select id="queueInput" @change="makeSchedule" v-model="scheduleName">
+<!--                <option value="A0">A0</option>-->
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+                <option value="A3">A3</option>
+                <option value="A4">A4</option>
+<!--                <option value="B0">B0</option>-->
+                <option value="B1">B1</option>
+                <option value="B2">B2</option>
+                <option value="B3">B3</option>
+                <option value="B4">B4</option>
+<!--                <option value="C0">C0</option>-->
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+                <option value="C3">C3</option>
+                <option value="C4">C4</option>
+            </select>
+            <label for="availability">Застосування</label>
+            <input type="text" id="availability" v-model="availability" @change="makeSchedule" style="min-width: 220px;"
+                   placeholder="з 00:00 до 5:00 та з 18:00 до 24:00" list="availability-examples">
+            <datalist id="availability-examples">
+                <option value="з 00:00 до 5:00 та з 18:00 до 24:00"></option>
+                <option value="з 06:00 до 24:00"></option>
+                <option value="з 18:00 до 23:59"></option>
+            </datalist>
+
+            <label for="date">Дата</label>
+            <input type="date" name="date" id="date" v-model="date" @change="makeSchedule">
+            <label for="rule">Rule</label>
+            <input type="text" name="rule" id="rule" v-model="rule" @change="makeSchedule">
+        </div>
+    </div>
+
+    <div v-if="schedule">
+        <h1>Наявність електроенергії (спіраль) для telegram</h1>
+        <table class="spirale">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
+                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450" />
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">
+                    <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
+
+        <h1>Наявність електроенергії (спіраль) для telegram</h1>
+        <table class="spirale">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
+                    <svg :id="'spirale-3-'+index" width="450" height="450" />
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">
+                    <svg :id="'spirale-3-'+(index+3)" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
+
+        <h1>Графік</h1>
+        <table>
+            <thead>
+            <tr>
+                <th rowspan="3">Номер черги</th>
+                <!--        <th colspan="2">Електроенергія наявна</th>-->
+                <th colspan="49">Години доби</th>
+            </tr>
+            <tr>
+                <!--        <th rowspan="2">при запланованому графіку відключень</th>-->
+                <!--        <th rowspan="2">при вимушеному збільшенні тривалості відключення</th>-->
+                <th class="hour">з</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>
+            </tr>
+            <tr>
+                <th class="hour">по</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td colspan="2">{{ index + 1 }} черга</td>
+                <!--        <td>{{ row.planned }}</td>-->
+                <!--        <td>{{ row.forced }}</td>-->
+                <td v-for="(char, idx) in row.split('')" :key="idx"
+                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <h1>Графік для telegram</h1>
+        <table class="telegram-table">
+            <thead>
+            <tr>
+                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>
+                <th colspan="48">Години доби</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td class="hour">{{ index + 1 }}</td>
+                <td v-for="(char, idx) in row.split('')" :key="idx"
+                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <br>
+        <h1>Наявність електроенергії</h1>
+        <table>
+            <tr>
+                <th rowspan="2">Номер черги</th>
+                <th colspan="2">Електроенергія наявна</th>
+            </tr>
+            <tr>
+                <th>при запланованому графіку відключень</th>
+                <th>при вимушеному збільшенні тривалості відключення</th>
+            </tr>
+            <tr v-for="(row, index) in availabilityTexts" :key="index">
+                <td>{{ index + 1 }} черга</td>
+                <td v-html="row.optimistic.join('<br>')"></td>
+                <td v-html="row.pessimistic.join('<br>')"></td>
+            </tr>
+        </table>
+        <br>
+        <h1>Наявність електроенергії (більш детально)</h1>
+        <table>
+            <tr>
+                <th rowspan="2">Номер черги</th>
+            </tr>
+            <tr>
+                <th>при запланованому графіку відключень</th>
+                <th>при вимушеному збільшенні тривалості відключення</th>
+            </tr>
+            <tr v-for="(row, index) in availabilityTextsDetailed" :key="index">
+                <td>{{ index + 1 }} черга</td>
+                <td>
+                    <div class="subtable">
+                        <div v-for="(subrow, subindex) in row.optimistic" :key="index"
+                             :class="['subtable-row', {'available':subrow.isAvailable}]">
+                            <span>{{subrow.period}}</span>
+                            <span>{{ subrow.isAvailable ? "наявна" : "відсутня" }}</span>
+                            <span>({{subrow.durationHours}} год.)</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="subtable">
+                        <div v-for="(subrow, subindex) in row.pessimistic" :key="index"
+                             :class="['subtable-row', {'available':subrow.isAvailable}]">
+                            <span>{{subrow.period}}</span>
+                            <span>{{ subrow.isAvailable ? "наявна" : "відсутня" }}</span>
+                            <span>({{subrow.durationHours}} год.)</span>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <br>
+        <h1>Наявність електроенергії (спіраль)</h1>
+        <table class="spirale">
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td @click="copySpirale">
+                    <svg :id="'spirale-optimistic-'+index" width="450" height="450"/>
+                </td>
+                <td @click="copySpirale">
+                    <svg :id="'spirale-pessimistic-'+index" width="450" height="450"/>
+                </td>
+                <td @click="copySpirale">
+                    <svg :id="'spirale-'+index" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div v-for="item in 6">
+        <h1>Графіки для {{ item }} черги</h1>
+        <table>
+            <tr>
+                <th class="hour">з</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>
+
+            </tr>
+            <tr>
+                <th class="hour">по</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>
+
+            </tr>
+            <tr v-for="(value, name, index) in SCHEDULES">
+                <td>{{ name }}</td>
+                <td v-for="(char, idx) in value[item-1].split('')" :key="idx"
+                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+<script>
+    function convertDurationString(input) {
+        // '2R 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G' -> RRRRRRRYYGGGGGGGRRRYYGGGGGGGRRRYYGGGGGGGRRRYYGGG
+        // Define a regular expression to match number-letter pairs
+        const regex = /([\d.]+)([A-Za-z])/g;
+        let result = '';
+
+        // Use the replace method to process each match
+        input.replace(regex, (match, number, letter) => {
+            // Append the letter 'number' times to the result
+            result += letter.repeat(Number(number) * 2);
+        });
+
+        return result.slice(0, 48);
+    }
+
+    function rotateArray(arr, positions) {
+        // ['a','b','c', 'd', 'e'] -> rotate by 2 -> ['c', 'd', 'e', 'a','b']
+
+        // Use modulo to handle cases where positions is greater than the array length
+        const len = arr.length;
+        const shift = positions % len;
+
+        // Slice the array and concatenate
+        return arr.slice(shift).concat(arr.slice(0, shift));
+    }
+
+    function parseAvailabilityString(inputString) {
+        // з 00:00 до 5:00 та з 18:00 до 24:00 -> '111110000000000000111111'
+        // з 06:00 до 24:00 -> '000000111111111111111111'
+        // з 00:00 до 23:59 -> '111111111111111111111111'
+        // з 00:00 до 24:00 -> '111111111111111111111111'
+        // з 00:00 по 24:00 -> '111111111111111111111111'
+        // Initialize an array of 24 elements, all set to '0'
+        let hoursMask = Array(24).fill('0');
+
+        try {
+            let timeString = inputString.replaceAll('по', 'до').replaceAll('23:59', '24:00')
+
+            // Split the input string by 'та' to get individual time ranges
+            let ranges = timeString.split('та');
+
+            ranges.forEach(range => {
+                // Extract the start and end times
+                // let [start, end] = range.match(/з\s+(\d{2}:\d{2})\s+до\s+(\d{2}:\d{2})/).slice(1, 3);
+                let [start, end] = range.match(/.*?(\d+:\d+).*?(\d+:\d+)/).slice(1, 3);
+
+                // Convert times to hours
+                let startHour = parseInt(start.split(':')[0], 10);
+                let endHour = parseInt(end.split(':')[0], 10);
+
+                // Handle special case for endHour being 24:00
+                // if (end === '24:00') {
+                //     endHour = 24;
+                // }
+
+                // Fill the hoursMask array with '1' for the range
+                for (let i = startHour; i < endHour; i++) {
+                    hoursMask[i] = '1';
+                }
+            });
+        } catch {
+
+        }
+
+        let mask = hoursMask.join('');
+        if (mask === '000000000000000000000000') mask = '111111111111111111111111';
+
+        let result = '';
+        for (let char of mask) {
+            result += char.repeat(2);
+        }
+        return result;
+    }
+
+    function applyMask(mask, str) {
+        if (mask.length !== str.length) {
+            throw new Error("Mask and string must be of the same length");
+        }
+
+        let result = '';
+        for (let i = 0; i < mask.length; i++) {
+            if (mask[i] === '0') {
+                result += 'G';
+            } else {
+                result += str[i];
+            }
+        }
+
+        return result;
+    }
+
+
+    function parseIntervals(intervalString, isOptimistic) {
+        if (intervalString.length !== 48) {
+            throw new Error("Interval string must be exactly 48 characters long");
+        }
+
+        if (isOptimistic) {
+            intervalString = intervalString.replaceAll('Y', 'G')
+        } else {
+            intervalString = intervalString.replaceAll('Y', 'R')
+        }
+
+        intervalString = mapReplace(intervalString, {'R': '0', 'G': '1'})
+        const intervals = [];
+        let start = null;
+
+        for (let i = 0; i < 48; i++) {
+            if (intervalString[i] === '1' && start === null) {
+                start = i;
+            } else if (intervalString[i] === '0' && start !== null) {
+                intervals.push(convertToTimeRange(start, i));
+                start = null;
+            }
+        }
+
+        if (start !== null) {
+            intervals.push(convertToTimeRange(start, 48));
+        }
+
+        return intervals;
+    }
+
+    function convertToTimeRange(start, end) {
+        const startHour = Math.floor(start / 2);
+        const startMinute = (start % 2) * 30;
+        const endHour = Math.floor(end / 2);
+        const endMinute = (end % 2) * 30;
+
+        const startTime = formatTime(startHour, startMinute);
+        const endTime = formatTime(endHour, endMinute);
+
+        return `${startTime}-${endTime}`;
+    }
+
+    function formatTime(hour, minute) {
+        return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+    }
+
+    function invertString(input) {
+        let result = '';
+        for (let char of input) {
+            if (char === '0') {
+                result += '1';
+            } else if (char === '1') {
+                result += '0';
+            } else {
+                throw new Error("Input string must only contain '0' and '1' characters");
+            }
+        }
+        return result;
+    }
+
+    function mapReplace(str, map) {
+        return str.replace(/./g, m => map[m])
+    }
+
+    function parseAvailability(intervalString, isOptimistic) {
+        if (intervalString.length !== 48) {
+            throw new Error("Input string must be exactly 48 characters long");
+        }
+        let input;
+
+        if (isOptimistic) {
+            input = intervalString.replaceAll('Y', 'G')
+        } else {
+            input = intervalString.replaceAll('Y', 'R')
+        }
+
+        input = mapReplace(input, {'R': '0', 'G': '1'})
+        // console.log(input)
+        const intervals = [];
+        let start = 0;
+        let currentStatus = input[0];
+        let startTime = 0;
+
+        for (let i = 1; i <= input.length; i++) {
+            if (input[i] !== currentStatus || i === input.length) {
+                const endTime = i;
+                const startHour = Math.floor(startTime / 2);
+                const startMinute = (startTime % 2) * 30;
+                const endHour = Math.floor(endTime / 2);
+                const endMinute = (endTime % 2) * 30;
+
+                const period = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}-${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+                const durationHours = (endTime - startTime) / 2;
+                const isAvailable = currentStatus === '1';
+
+                intervals.push({
+                    period: period,
+                    isAvailable: isAvailable,
+                    durationHours: durationHours
+                });
+
+                startTime = endTime;
+                currentStatus = input[i];
+            }
+        }
+
+        return intervals;
+    }
+
+    function parseScheduleSImple(scheduleStr) {
+        //  "0-NA, 5-B1, 7.5-B2, 11.5-B3, 16.5-B2, 20-NA";
+        // Split the string by commas to get individual schedule entries
+        const entries = scheduleStr.split(', ');
+
+        // Initialize the schedule array with 'NA' for 48 half-hour intervals
+        const schedule = Array(48).fill('NA');
+
+        // Define a helper function to convert fractional hours to interval indices
+        function timeToIndex(time) {
+            return Math.floor(time * 2);
+        }
+
+        // Process each entry in the schedule string
+        entries.forEach(entry => {
+            const [timeStr, graph] = entry.split('-');
+            const time = parseFloat(timeStr);
+            const startIndex = timeToIndex(time);
+
+            // Determine the end index based on the next time entry or the end of the day
+            const nextEntry = entries.find(e => parseFloat(e.split('-')[0]) > time);
+            const endIndex = nextEntry ? timeToIndex(parseFloat(nextEntry.split('-')[0])) : 48;
+
+            // Fill the schedule array with the graph for the corresponding intervals
+            for (let i = startIndex; i < endIndex; i++) {
+                schedule[i] = graph;
+            }
+        });
+
+        return schedule;
+    }
+
+    function parseSchedule(scheduleStr) {
+        // 5-B1, 7-B2, 11.5-B3, 16.5-B2
+        // 5-B1,16-NA,24-B1
+        // 0-B1,5-NA,16-B1
+        //  0-NA, 5-B1, 7.5-B2, 11.5-B3, 16.5-B2, 20-NA;
+        // Initialize the schedule array with 'NA' for 48 half-hour intervals
+        const schedule = Array(48).fill('NA');
+
+        // Regular expression to match the pattern of "time-graph"
+        const regex = /(\d+(?:\.\d+)?)-([ABC][1-4]?|N?A?)/g;
+        let match;
+        const entries = [];
+
+        // Process each match in the schedule string
+        while ((match = regex.exec(scheduleStr)) !== null) {
+            const time = parseFloat(match[1]);
+            const graph = match[2] || 'NA';
+            entries.push({ time, graph });
+        }
+
+        // Sort entries by time
+        entries.sort((a, b) => a.time - b.time);
+
+        // Fill the schedule array based on parsed entries
+        for (let i = 0; i < entries.length; i++) {
+            const startTime = entries[i].time;
+            const graph = entries[i].graph;
+            const startIndex = Math.floor(startTime * 2);
+
+            const endIndex = (i + 1 < entries.length) ?
+                Math.floor(entries[i + 1].time * 2) : 48;
+
+            for (let j = startIndex; j < endIndex; j++) {
+                schedule[j] = graph;
+            }
+        }
+
+        return schedule;
+    }
+</script>
+<script>
+    async function convertSvgToPngAndCopy(svgElement) {
+        const svgData = new XMLSerializer().serializeToString(svgElement);
+        const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+        const url = URL.createObjectURL(svgBlob);
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Create an image element to load the SVG data
+        const img = new Image();
+        img.onload = async function () {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+
+            // Convert the canvas content to a PNG data URL
+            canvas.toBlob(async (blob) => {
+                const item = new ClipboardItem({'image/png': blob});
+                await navigator.clipboard.write([item]);
+                //alert('PNG copied to clipboard!');
+            });
+        };
+        img.src = url
+    }
+
+    // document.getElementById('convertButton').addEventListener('click', convertSvgToPngAndCopy);
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.0.0/d3.min.js"></script>
+<script>
+    // SPIRALE D3
+    const spiralArc = (fromRadius, toRadius, width, fromAngle, toAngle) => {
+        const x1 = fromRadius * Math.sin(fromAngle);
+        const y1 = fromRadius * -Math.cos(fromAngle);
+        const x2 = (fromRadius + width) * Math.sin(fromAngle);
+        const y2 = (fromRadius + width) * -Math.cos(fromAngle);
+        const x3 = toRadius * Math.sin(toAngle);
+        const y3 = toRadius * -Math.cos(toAngle);
+        const x4 = (toRadius + width) * Math.sin(toAngle);
+        const y4 = (toRadius + width) * -Math.cos(toAngle);
+        return `
+    M ${x1},${y1}
+    L ${x2},${y2}
+    A ${fromRadius},${fromRadius} 1 0 1 ${x4},${y4}
+    L ${x3},${y3}
+    A ${fromRadius},${fromRadius} 0 0 0 ${x1},${y1}`;
+    }
+
+    const tick = (fromRadius, toRadius, width, fromAngle, toAngle) => {
+        const x1 = fromRadius * Math.sin(fromAngle);
+        const y1 = fromRadius * -Math.cos(fromAngle);
+        const x2 = (fromRadius + width) * Math.sin(fromAngle);
+        const y2 = (fromRadius + width) * -Math.cos(fromAngle);
+        return `
+    M ${x1},${y1}
+    L ${x2},${y2}`
+    }
+
+    function g_appendText(g, x, y, textContent) {
+        g.append('text')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '-0.4em') // vertical alignment
+            .attr('font-size', '18px')
+            .attr('font-family', 'sans-serif')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(textContent);
+    }
+
+    function g_appendDateText(g, x, y, textContent) {
+        g.append('text')
+            .attr('x', x)
+            .attr('y', y)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '-0.4em') // vertical alignment
+            .attr('font-size', '20px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(textContent);
+    }
+
+
+    function drawSpirale(selector, data, number, isOptimistic, date, scheduleName) {
+        // https://stackoverflow.com/a/68149618
+        const svg = d3.select(`#${selector}`);
+        svg.html('');
+        const g = svg.append('g')
+            .attr('transform', 'translate(225,225)')
+
+        const WIDTH = 45;
+        const BASE_RADIUS = 35;
+        const angle = Math.PI * 2 / 24;
+        for (let index = 0; index < 48; index++) {
+            const fromAngle = angle * index;
+            const toAngle = angle * (index + 1);
+            const fromRadius = BASE_RADIUS + index * 2 + WIDTH;
+            const toRadius = BASE_RADIUS + (index + 1) * 2 + WIDTH;
+            const path = spiralArc(fromRadius, toRadius, WIDTH, fromAngle, toAngle);
+            // const color = data[index] === '1' ? 'rgb(0,255,0)' : 'rgb(255,0,0)'
+            const color = {
+                'G': '#92D050',
+                'R': 'lightpink',
+                'Y': '#C9CE71'
+            }[data[index]]
+
+            // const color = `rgb(0,${192 + Math.random() * 64},255)`
+            g.append('path')
+                .attr('d', path)
+                .style('fill', color);
+
+            if (index % 2 == 1) {
+                g.append('path',)
+                    .attr('d', tick(fromRadius, toRadius, ((index % 2 == 0) ? WIDTH : WIDTH / 5), fromAngle, toAngle))
+                    .style('stroke', 'black') // Set the stroke color
+                    .style('stroke-width', '1px'); // Set the stroke width
+            }
+            if (index % 2 == 0) {
+                g.append('path',)
+                    .attr('d', tick(fromRadius, toRadius, WIDTH / 3, fromAngle, toAngle))
+                    .style('stroke', 'black') // Set the stroke color
+                    .style('stroke-width', '2px'); // Set the stroke width
+            }
+
+
+            if (index % 2 == 0) {
+                // Add text at the midpoint of the arc
+                // const midRadius = (fromRadius + toRadius) / 2;
+                const midRadius = fromRadius + WIDTH / 2 + WIDTH * 0.15;
+                // const midAngle = (fromAngle + toAngle) / 2;
+                const midAngle = fromAngle;
+                const textX = midRadius * Math.sin(midAngle);
+                const textY = midRadius * -Math.cos(midAngle);
+
+                // g.append('circle')
+                //     .attr('cx', textX)
+                //     .attr('cy', textY)
+                //     .attr('r', 20) // Adjust the radius to fit your text
+                //     .attr('fill', 'yellow')
+                //     .attr('opacity', 0.7); // Set the opacity to 0.5 for semi-transparency
+                //
+                // g.append('path')
+                //     .attr('cx', textX)
+                //     .attr('cy', textY)
+                //     .attr('r', 20) // Adjust the radius to fit your text
+                //     .attr('fill', 'yellow')
+                //     .attr('opacity', 0.7); // Set the opacity to 0.5 for semi-transparency
+
+                g.append('text')
+                    .attr('x', textX)
+                    .attr('y', textY)
+                    .attr('dy', '0.35em') // vertical alignment
+                    .attr('font-size', '28px')
+                    .attr('font-family', 'sans-serif')
+                    .attr('font-weight', 'bold')
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', 'black')
+                    // .attr('stroke', 'lightyellow') // stroke="deepPink" stroke-width="3px"
+                    // .attr('stroke-width', '1px')
+                    .text(parseInt(index / 2));
+            }
+        }
+
+        g.append('text')
+            .attr('x', 0)
+            .attr('y', -40)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '-0.4em') // vertical alignment
+            .attr('font-size', '32px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(number + ' черга');
+
+        let dateString
+        if (date) {
+            dateString = `${(new Date(date)).toLocaleDateString('uk', {weekday: 'short'})} ${(new Date(date)).toLocaleDateString('uk')}`
+        }
+
+        if (isOptimistic === true) {
+            g_appendText(g, 0, 0, 'при запланованому');
+            g_appendText(g, 0, 20, 'графіку відключень');
+            dateString && g_appendDateText(g, 0, 45, dateString);
+        } else if (isOptimistic === false) {
+            g_appendText(g, 0, 0, 'при вимушеному');
+            g_appendText(g, 0, 20, 'збільшенні тривалості');
+            g_appendText(g, 0, 40, 'відключення');
+            dateString && g_appendDateText(g, 0, 65, dateString);
+        } else {
+            dateString && g_appendDateText(g, 0, 25, dateString);
+        }
+
+        g.append('text')
+            .attr('x', 0)
+            .attr('y', 85)
+            .attr('dy', '0.35em') // vertical alignment
+            .attr('dx', '0em') // vertical alignment
+            .attr('font-size', '20px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'middle')
+            .attr('fill', 'black')
+            .text(scheduleName);
+
+    }
+
+    function parseSpiraleData(intervalString, isOptimistic) {
+        if (intervalString.length !== 48) {
+            throw new Error("Input string must be exactly 48 characters long");
+        }
+        let input;
+
+        if (isOptimistic) {
+            input = intervalString.replaceAll('Y', 'G')
+        } else {
+            input = intervalString.replaceAll('Y', 'R')
+        }
+        return input
+        // return mapReplace(input, {'R': '0', 'G': '1'})
+    }
+
+</script>
+<script type="module">
+    import { createApp } from 'vue'
+
+    const SCHEDULES = {
+        // A0: [
+        //     '3R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G',
+        //     '3G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G',
+        //     '4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G',
+        //     '5G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G',
+        //     '6G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G ',
+        //     '2R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G 1R 1Y 4G',
+        // ],
+        A1: [
+            '1G 2.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G',
+            '3G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G',
+            '4G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G',
+            '5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G',
+            '0.5Y 5.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y ',
+            '1.5R 1Y 4.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G 1.5R 1Y 3.5G',
+        ],
+        A2: [
+            '2R 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G',
+            '3G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G',
+            '4G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G',
+            '0.5Y 4.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G',
+            '0.5R 1Y 4.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G',
+            '3.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G 2.5R 1Y 2.5G',
+        ],
+        A3: [
+            '1G 4.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G',
+            '3G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G',
+            '0.5Y 3.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G',
+            '1.5R 1Y 2.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G',
+            '3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G',
+            '4.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G 3.5R 1Y 1.5G',
+        ],
+        A4: [
+            '2R 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G',
+            '3G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G',
+            '0.5R 3.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G',
+            '3.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G',
+            '4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G',
+            '5.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G 4.5R 1.5G ',
+        ],
+    }
+
+    // SCHEDULES.A0 = SCHEDULES.A0.map(convertDurationString)
+    SCHEDULES.A1 = SCHEDULES.A1.map(convertDurationString)
+    SCHEDULES.A2 = SCHEDULES.A2.map(convertDurationString)
+    SCHEDULES.A3 = SCHEDULES.A3.map(convertDurationString)
+    SCHEDULES.A4 = SCHEDULES.A4.map(convertDurationString)
+
+    // SCHEDULES.B0 = rotateArray(SCHEDULES.A0, 2)
+    SCHEDULES.B1 = rotateArray(SCHEDULES.A1, 2)
+    SCHEDULES.B2 = rotateArray(SCHEDULES.A2, 2)
+    SCHEDULES.B3 = rotateArray(SCHEDULES.A3, 2)
+    SCHEDULES.B4 = rotateArray(SCHEDULES.A4, 2)
+
+    // SCHEDULES.C0 = rotateArray(SCHEDULES.A0, 4)
+    SCHEDULES.C1 = rotateArray(SCHEDULES.A1, 4)
+    SCHEDULES.C2 = rotateArray(SCHEDULES.A2, 4)
+    SCHEDULES.C3 = rotateArray(SCHEDULES.A3, 4)
+    SCHEDULES.C4 = rotateArray(SCHEDULES.A4, 4)
+
+    createApp({
+        methods: {
+            padZero(value) {
+                if (!value) {
+                    value = 0;
+                }
+                return value.toString().padStart(2, '0');
+            },
+            makeSchedule() {
+                let schedule;
+                if (this.rule) {
+                    let parsedSchedule = parseSchedule(this.rule)
+                    schedule = SCHEDULES.A1.map((_, idx) => parsedSchedule.map((e, index) => (e === 'NA' ? 'G' : SCHEDULES[e][idx][index])).join(''))
+                } else {
+                    schedule = SCHEDULES[this.scheduleName]
+                    if (schedule) {
+                        let availabilityMask = parseAvailabilityString(this.availability);
+                        schedule = SCHEDULES[this.scheduleName].map(value => applyMask(availabilityMask, value));
+                    }
+                }
+
+                if (schedule) {
+                    this.schedule = schedule;
+                    this.availabilityTexts = this.schedule.map(value => ({
+                        optimistic: parseIntervals(value, true),
+                        pessimistic: parseIntervals(value, false)
+                    }))
+                    // console.log(this.schedule, this.availabilityTexts)
+                    this.availabilityTextsDetailed = this.schedule.map(value => ({
+                        optimistic: parseAvailability(value, true),
+                        pessimistic: parseAvailability(value, false)
+                    }))
+                    // console.log(this.availabilityTextsDetailed)
+                } else {
+                    this.schedule = null
+                    this.availabilityTexts = null
+                    this.availabilityTextsDetailed = null
+                }
+            },
+            async loadHistoryData() {
+                this.historyData = await (await fetch('https://clo-clo.kurs.win/poe.json')).json()
+                const currentDate = (new Date()).toLocaleDateString();
+                console.log(this.historyData)
+                const matchingRow = this.historyData.values.find(row => row[0] == currentDate);
+                if (matchingRow) this.historyDataValue = matchingRow[0];
+            },
+            async copySpirale(element) {
+                await convertSvgToPngAndCopy(element.currentTarget.childNodes[0])
+            }
+        },
+
+        data() {
+            return {
+                scheduleName: '',
+                date: null,
+                availability: '',
+                schedule: null,
+                availabilityTexts: null,
+                availabilityTextsDetailed: null,
+                spirals: null,
+                SCHEDULES: SCHEDULES,
+                historyData: null,
+                historyDataValue: '',
+                rule: '',
+            };
+        },
+
+        created() {
+            this.makeSchedule()
+            this.loadHistoryData()
+        },
+        watch: {
+            schedule(newSchedule, oldSchedule) {
+                // console.log('watchschedule', newSchedule)
+
+                if (newSchedule) {
+                    this.$nextTick(() => {
+                        newSchedule.forEach((value, index, array) => {
+                            const optimistic = parseSpiraleData(value, true);
+                            drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
+                            drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this.date, this.scheduleName)
+                            drawSpirale(`spirale-3-${index}`, value, index + 1, undefined, this.date, this.scheduleName)
+                            drawSpirale(`spirale-${index}`, value, index + 1, undefined, this.date, this.scheduleName)
+                            drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this.date, this.scheduleName)
+                        })
+                    });
+
+                }
+            },
+            historyDataValue(newhistoryDataValue, oldhistoryDataValue) {
+                const matchingRow = this.historyData.values.find(row => row[0] == newhistoryDataValue);
+                if (matchingRow) {
+                    this.scheduleName = matchingRow[1]
+
+                    const [day, month, year] = matchingRow[0].split('.');
+
+                    this.date = `${year}-${month}-${day}`
+                    this.availability = matchingRow[2]
+                    this.rule = matchingRow[3]
+
+                    this.makeSchedule()
+                } else {
+                    this.scheduleName = ''
+                    this.date = ''
+                    this.availability = ''
+                    this.rule = ''
+                    this.makeSchedule()
+                }
+            }
+        }
+    }).mount('#app')
+</script>
+</body>
+</html>
