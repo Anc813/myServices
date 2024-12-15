@@ -525,33 +525,38 @@
 
                 if (newDate == '16-12-2024') {
                     this.schedule = [
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGYGGGGRYGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGYRRRRRYGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG',
-                        'GGGGGGGGGGGGGGGGGGGYRRRRGGGGGGGGGGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG', // 1.1
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGG', // 2.1
+                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG', // 3.1
+
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG', // 1.2
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG', // 2.2
+                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG', // 3.2
+
+                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGYGGGGRYGGGGGGGG', // 4.1
+                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG', // 5.1
+                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG', // 6.1
+
+                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGYRRRRRYGGGGGGGG', // 4.2
+                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG', // 5.2
+                        'GGGGGGGGGGGGGGGGGGGYRRRRGGGGGGGGGGGGGGGGGGGGGGGG', // 6.2
                     ]
                     this.scheduleNames = [
                         '1.1 черга',
-                        '1.2 черга',
                         '2.1 черга',
-                        '2.2 черга',
                         '3.1 черга',
+                        '1.2 черга',
+                        '2.2 черга',
                         '3.2 черга',
+
                         '4.1 черга',
-                        '4.2 черга',
                         '5.1 черга',
-                        '5.2 черга',
                         '6.1 черга',
+                        '4.2 черга',
+                        '5.2 черга',
                         '6.2 черга',
                     ]
+
                 } else {
                     let data = await this.fetchHTML()
                     this.schedule = parseSchedule(data)
