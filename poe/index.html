@@ -130,58 +130,58 @@
 <!--            </tr>-->
 <!--        </table>-->
 
-<!--        <h1>Графік <button style="vertical-align: middle;" @click="myCopy('#table-1', $event)">Копіювати</button></h1>-->
-<!--        <table id="table-1">-->
-<!--            <thead>-->
-<!--            <tr>-->
-<!--                <th rowspan="3">Номер черги</th>-->
-<!--                &lt;!&ndash;        <th colspan="2">Електроенергія наявна</th>&ndash;&gt;-->
-<!--                <th colspan="49">Години доби</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                &lt;!&ndash;        <th rowspan="2">при запланованому графіку відключень</th>&ndash;&gt;-->
-<!--                &lt;!&ndash;        <th rowspan="2">при вимушеному збільшенні тривалості відключення</th>&ndash;&gt;-->
-<!--                <th class="hour">з</th>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <th class="hour">по</th>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>-->
-<!--            </tr>-->
-<!--            </thead>-->
-<!--            <tbody>-->
-<!--            <tr v-for="(row, index) in schedule" :key="index">-->
-<!--                <td colspan="2">{{ index + 1 }} черга</td>-->
-<!--                &lt;!&ndash;        <td>{{ row.planned }}</td>&ndash;&gt;-->
-<!--                &lt;!&ndash;        <td>{{ row.forced }}</td>&ndash;&gt;-->
-<!--                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"-->
-<!--                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>-->
-<!--            </tr>-->
-<!--            </tbody>-->
-<!--        </table>-->
-<!--        <br>-->
-<!--        <h1>Компактний графік <button style="vertical-align: middle;" @click="myCopy('#table-2', $event)">Копіювати</button></h1>-->
-<!--        <table class="telegram-table" id="table-2">-->
-<!--            <thead>-->
-<!--            <tr>-->
-<!--                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>-->
-<!--                <th colspan="48">Години доби</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>-->
-<!--            </tr>-->
-<!--            </thead>-->
-<!--            <tbody>-->
-<!--            <tr v-for="(row, index) in schedule" :key="index">-->
-<!--                <td class="hour">{{ index + 1 }}</td>-->
-<!--                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"-->
-<!--                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>-->
-<!--            </tr>-->
-<!--            </tbody>-->
-<!--        </table>-->
+        <h1>Графік <button style="vertical-align: middle;" @click="myCopy('#table-1', $event)">Копіювати</button></h1>
+        <table id="table-1">
+            <thead>
+            <tr>
+                <th rowspan="3">Номер черги</th>
+                <!--        <th colspan="2">Електроенергія наявна</th>-->
+                <th colspan="49">Години доби</th>
+            </tr>
+            <tr>
+                <!--        <th rowspan="2">при запланованому графіку відключень</th>-->
+                <!--        <th rowspan="2">при вимушеному збільшенні тривалості відключення</th>-->
+                <th class="hour">з</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>
+            </tr>
+            <tr>
+                <th class="hour">по</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td colspan="2">{{ scheduleNames[index] }}</td>
+                <!--        <td>{{ row.planned }}</td>-->
+                <!--        <td>{{ row.forced }}</td>-->
+                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
+                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <h1>Компактний графік <button style="vertical-align: middle;" @click="myCopy('#table-2', $event)">Копіювати</button></h1>
+        <table class="telegram-table" id="table-2">
+            <thead>
+            <tr>
+                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>
+                <th colspan="48">Години доби</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td class="hour">{{ scheduleNames[index].replace('черга', '') }}</td>
+                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
+                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -411,10 +411,10 @@
                 .attr('font-family', 'sans-serif')
                 .attr('font-weight', 'bold')
                 .attr('text-anchor', 'middle')
-                .append('tspan').attr('fill', '#DB9DA8').text('-' + ((data.match(/R/g) || []).length / 2).toString())
+                .append('tspan').attr('fill', '#DB9DA8').text('-' + ((data.match(/[RY]/g) || []).length / 2).toString())
                 .append('tspan').attr('fill', 'black').text(`  `)
                 // .append('tspan').attr('fill', 'black').text(` ${scheduleName.slice(0, 1)} `)
-                .append('tspan').attr('fill', '#83BA48').text(  '+' + ((data.match(/G/g) || []).length /2).toString())
+                .append('tspan').attr('fill', '#83BA48').text(  '+' + ((data.match(/G/g) || []).length  /2).toString())
                 // .attr('fill', 'black')
                 // .text(scheduleName);
         }
@@ -525,35 +525,31 @@
 
                 if (newDate == '16-12-2024') {
                     this.schedule = [
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG', // 1.1
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGG', // 2.1
-                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG', // 3.1
-
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG', // 1.2
-                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG', // 2.2
-                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG', // 3.2
-
-                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGGGGGGRYGGGGGGGG', // 4.1
-                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG', // 5.1
-                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG', // 6.1
-
-                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGYRRRRRYGGGGGGGG', // 4.2
-                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG', // 5.2
-                        'GGGGGGGGGGGGGGGGGGGYRRRRGGGGGGGGGGGGGGGGGGGGGGGG', // 6.2
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGRRRRYGGGGGGGGGGGGGGYRRRRGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGGGGGGRYGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGRRYGGGGGGGGGGGGGGYRRRRRYGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGYRRRRRYGGGGGGGGGGGGGGGGGGGGGG',
+                        'GGGGGGGGGGGGGGGGGGGYRRRRGGGGGGGGGGGGGGGGGGGGGGGG',
                     ]
                     this.scheduleNames = [
                         '1.1 черга',
-                        '2.1 черга',
-                        '3.1 черга',
                         '1.2 черга',
+                        '2.1 черга',
                         '2.2 черга',
+                        '3.1 черга',
                         '3.2 черга',
-
                         '4.1 черга',
-                        '5.1 черга',
-                        '6.1 черга',
                         '4.2 черга',
+                        '5.1 черга',
                         '5.2 черга',
+                        '6.1 черга',
                         '6.2 черга',
                     ]
 
