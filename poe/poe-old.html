@@ -107,81 +107,86 @@
     <h1>З 16.12.2024 Укренерго запроваджує уніфіковані графіки на всю країну. Наразі незрозуміло як саме це буде.</h1>
 
     <div v-if="schedule">
-        <h1>Точно як у Полтаваобленерго <button style="vertical-align: middle;" @click="myCopy('#spirale', $event)">Копіювати</button></h1>
-        <table class="spirale" id="spirale">
-            <tr v-for="groupIndex in Math.ceil(schedule.length / 3)" :key="groupIndex">
-                <td v-for="(row, index) in schedule.slice((groupIndex - 1) * 3, groupIndex * 3)" :key="index" @click="copySpirale">
-                    <svg :id="'spirale-3-'+((groupIndex - 1) * 3 + index)" width="450" height="450"/>
+        <h1>Без півгодин <button style="vertical-align: middle;" @click="myCopy('#spirale-no-hh', $event)">Копіювати</button></h1>
+        <table class="spirale" id="spirale-no-hh">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
+                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450" />
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">
+                    <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>
                 </td>
             </tr>
         </table>
 
-<!--        <h1>Без півгодин <button style="vertical-align: middle;" @click="myCopy('#spirale-no-hh', $event)">Копіювати</button></h1>-->
-<!--        <table class="spirale" id="spirale-no-hh">-->
-<!--            <tr>-->
-<!--                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >-->
-<!--                    <svg :id="'spirale-optimistic-2-'+index" width="450" height="450" />-->
-<!--                </td>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">-->
-<!--                    <svg :id="'spirale-optimistic-2-'+(index+3)" width="450" height="450"/>-->
-<!--                </td>-->
-<!--            </tr>-->
-<!--        </table>-->
+        <h1>Точно як у Полтаваобленерго <button style="vertical-align: middle;" @click="myCopy('#spirale', $event)">Копіювати</button></h1>
+        <table class="spirale" id="spirale">
+            <tr>
+                <td v-for="(row, index) in schedule.slice(0, 3)" :key="index" @click="copySpirale" >
+                    <svg :id="'spirale-3-'+index" width="450" height="450" />
+                </td>
+            </tr>
+            <tr>
+                <td v-for="(row, index) in schedule.slice(3)" :key="index"  @click="copySpirale">
+                    <svg :id="'spirale-3-'+(index+3)" width="450" height="450"/>
+                </td>
+            </tr>
+        </table>
 
-<!--        <h1>Графік <button style="vertical-align: middle;" @click="myCopy('#table-1', $event)">Копіювати</button></h1>-->
-<!--        <table id="table-1">-->
-<!--            <thead>-->
-<!--            <tr>-->
-<!--                <th rowspan="3">Номер черги</th>-->
-<!--                &lt;!&ndash;        <th colspan="2">Електроенергія наявна</th>&ndash;&gt;-->
-<!--                <th colspan="49">Години доби</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                &lt;!&ndash;        <th rowspan="2">при запланованому графіку відключень</th>&ndash;&gt;-->
-<!--                &lt;!&ndash;        <th rowspan="2">при вимушеному збільшенні тривалості відключення</th>&ndash;&gt;-->
-<!--                <th class="hour">з</th>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <th class="hour">по</th>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>-->
-<!--            </tr>-->
-<!--            </thead>-->
-<!--            <tbody>-->
-<!--            <tr v-for="(row, index) in schedule" :key="index">-->
-<!--                <td colspan="2">{{ index + 1 }} черга</td>-->
-<!--                &lt;!&ndash;        <td>{{ row.planned }}</td>&ndash;&gt;-->
-<!--                &lt;!&ndash;        <td>{{ row.forced }}</td>&ndash;&gt;-->
-<!--                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"-->
-<!--                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>-->
-<!--            </tr>-->
-<!--            </tbody>-->
-<!--        </table>-->
-<!--        <br>-->
-<!--        <h1>Компактний графік <button style="vertical-align: middle;" @click="myCopy('#table-2', $event)">Копіювати</button></h1>-->
-<!--        <table class="telegram-table" id="table-2">-->
-<!--            <thead>-->
-<!--            <tr>-->
-<!--                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>-->
-<!--                <th colspan="48">Години доби</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>-->
-<!--            </tr>-->
-<!--            </thead>-->
-<!--            <tbody>-->
-<!--            <tr v-for="(row, index) in schedule" :key="index">-->
-<!--                <td class="hour">{{ index + 1 }}</td>-->
-<!--                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"-->
-<!--                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>-->
-<!--            </tr>-->
-<!--            </tbody>-->
-<!--        </table>-->
+        <h1>Графік <button style="vertical-align: middle;" @click="myCopy('#table-1', $event)">Копіювати</button></h1>
+        <table id="table-1">
+            <thead>
+            <tr>
+                <th rowspan="3">Номер черги</th>
+                <!--        <th colspan="2">Електроенергія наявна</th>-->
+                <th colspan="49">Години доби</th>
+            </tr>
+            <tr>
+                <!--        <th rowspan="2">при запланованому графіку відключень</th>-->
+                <!--        <th rowspan="2">при вимушеному збільшенні тривалості відключення</th>-->
+                <th class="hour">з</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}:00</th>
+            </tr>
+            <tr>
+                <th class="hour">по</th>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}:00</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td colspan="2">{{ index + 1 }} черга</td>
+                <!--        <td>{{ row.planned }}</td>-->
+                <!--        <td>{{ row.forced }}</td>-->
+                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
+                    :class="[char, {'even':idx % 2 == 0, 'odd':  idx % 2 == 1}]"></td>
+            </tr>
+            </tbody>
+        </table>
+        <br>
+        <h1>Компактний графік <button style="vertical-align: middle;" @click="myCopy('#table-2', $event)">Копіювати</button></h1>
+        <table class="telegram-table" id="table-2">
+            <thead>
+            <tr>
+                <th rowspan="3" style="writing-mode: vertical-rl; transform: rotate(180deg);">Черга</th>
+                <th colspan="48">Години доби</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour - 1) }}</th>
+            </tr>
+            <tr>
+                <th class="hour" colspan="2" v-for="hour in 24">{{ padZero(hour % 24) }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(row, index) in schedule" :key="index">
+                <td class="hour">{{ index + 1 }}</td>
+                <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
+                    :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -369,7 +374,7 @@
             .attr('font-weight', 'bold')
             .attr('text-anchor', 'middle')
             .attr('fill', 'black')
-            .text(vueObject.scheduleNames[number]);
+            .text(number + ' черга');
 
         let dateString
         if (date) {
@@ -452,17 +457,6 @@
       // console.log(schedules)
       return schedules;
     }
-    function parseScheduleNames(htmlString) {
-      // Create a DOM parser
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlString, 'text/html');
-
-      // Get all rows from the tbody
-      const rows = doc.querySelectorAll('tbody tr td.turnoff-scheduleui-table-queue');
-      const strippedTexts = Array.from(rows).map(row => row.textContent.trim());
-      console.log(strippedTexts)
-      return strippedTexts;
-    }
     function mapReplace(str, map) {
         return str.replace(/./g, m => map[m])
     }
@@ -521,7 +515,6 @@
             async makeSchedule() {
                 let data = await this.fetchHTML()
                 this.schedule = parseSchedule(data)
-                this.scheduleNames = parseScheduleNames(data)
                 return
                 let schedule;
                 if (this.rule) {
@@ -581,7 +574,6 @@
                 // dateString: (new Date()).toISOString(),
                 // availability: '',
                 schedule: null,
-                scheduleNames: null,
                 // availabilityTexts: null,
                 // availabilityTextsDetailed: null,
                 // spirals: null,
@@ -620,7 +612,7 @@
                             // const optimistic = value;
                             // drawSpirale(`spirale-optimistic-${index}`, parseSpiraleData(value, true), index + 1, true, this)
                             drawSpirale(`spirale-optimistic-2-${index}`, parseSpiraleData(value, true), index + 1, true, this)
-                            drawSpirale(`spirale-3-${index}`, parseSpiraleData(value, false), index, true, this)
+                            drawSpirale(`spirale-3-${index}`, parseSpiraleData(value, false), index + 1, true, this)
                             // drawSpirale(`spirale-${index}`, value, index + 1, undefined, this)
                             // drawSpirale(`spirale-pessimistic-${index}`, parseSpiraleData(value, false), index + 1, false, this)
                         })
