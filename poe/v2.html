@@ -268,6 +268,42 @@
             .text(textContent);
     }
 
+    function generateOutageIntervals(data) {
+        const padZero = (value) => value.toString().padStart(2, '0');
+
+        const formatTime = (minutes) => {
+            if (minutes === 1440) return '24:00';
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${padZero(hours)}:${padZero(mins)}`;
+        };
+
+        const intervals = [];
+        let startInterval = -1;
+
+        for (let i = 0; i < data.length; i++) {
+            const isOutage = data[i] === 'R';// || data[i] === 'Y';
+
+            if (isOutage && startInterval === -1) {
+                startInterval = i;
+            } else if (!isOutage && startInterval !== -1) {
+                const startTime = formatTime(startInterval * 30);
+                const endTime = formatTime(i * 30);
+                intervals.push(`${startTime}-${endTime}`);
+                startInterval = -1;
+            }
+        }
+
+        // Если отключение продолжается до конца суток
+        if (startInterval !== -1) {
+            const startTime = formatTime(startInterval * 30);
+            const endTime = formatTime(data.length * 30);
+            intervals.push(`${startTime}-${endTime}`);
+        }
+
+        return intervals.join('\n');
+    }
+
 
     function drawSpirale(selector, data, number, isOptimistic, vueObject) {
         // https://stackoverflow.com/a/68149618
@@ -390,13 +426,14 @@
             .attr('font-size', '20px')
             .attr('font-family', 'sans-serif')
             .attr('font-weight', 'bold')
-            .attr('text-anchor', 'bold')
+            .attr('text-anchor', 'middle')
             .attr('fill', 'black');
 
+        const outageText = generateOutageIntervals(data);
         textBlock.selectAll('tspan')
-            .data('4:00-7:30\n10:00-14:00\n16:00-20:00\n22:00-24:00'.split('\n'))
+            .data(outageText.split('\n'))
             .enter().append('tspan')
-            .attr('x', textBlock.attr('x'))
+            .attr('x', -0) // textBlock.attr('x'))
             .attr('dy', (d, i) => i > 0 ? '1.2em' : 0)
             .text(d => d);
 

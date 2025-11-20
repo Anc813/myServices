@@ -105,6 +105,10 @@
 
     </div>
 
+    <h3>
+        <a :href="'big-font' + searchParams">Версія з трохи збільшеним шрифтом дати</a>
+    </h3>
+
     <div v-if="schedule">
         <h1>Точно як у Полтаваобленерго <button style="vertical-align: middle;" @click="myCopy('#spirale', $event)">Копіювати</button></h1>
         <table class="spirale" id="spirale">
@@ -625,6 +629,7 @@
                 // historyData: null,
                 // historyDataValue: '',
                 // rule: '',
+                searchParams: '',
                 // showAll: true,
                 total: false,
                 tomorrow: false
@@ -633,7 +638,8 @@
 
         async created() {
             const urlParams = new URLSearchParams(window.location.search);
-
+            this.searchParams = window.location.search;
+            
             let date = new Date()
             date = new Date(date - date.getTimezoneOffset() * 60000)
 
