@@ -83,6 +83,9 @@
         .telegram-table .hour {
             font-size: 32px;
         }
+        .spirale {
+            background-color: white;
+        }
     </style>
 </head>
 <body>
@@ -93,9 +96,6 @@
       }
     }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<canvas id="canvas" style="display:none;"></canvas>
 <div id="app">
     <div class="form-container">
        <input type="date" @change="makeSchedule" v-model="date">
@@ -179,7 +179,6 @@
     </div>
 </div>
 
-
 <script>
     async function convertSvgToPngAndCopy(svgElement) {
         const svgData = new XMLSerializer().serializeToString(svgElement);
@@ -210,7 +209,6 @@
 
     // document.getElementById('convertButton').addEventListener('click', convertSvgToPngAndCopy);
 </script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.0.0/d3.min.js"></script>
 <script>
     // SPIRALE D3
@@ -500,6 +498,7 @@
 </script>
 <script type="module">
     import { createApp } from 'vue'
+    import { snapdom } from 'https://cdn.jsdelivr.net/npm/@zumer/snapdom/dist/snapdom.mjs';
 
     createApp({
         methods: {
@@ -607,19 +606,23 @@
                 await convertSvgToPngAndCopy(element.currentTarget.childNodes[0])
             },
 
-            myCopy(selector, event) {
+            async myCopy(selector, event, isSvg = false) {
                 event.target.innerText = 'Зачекайте'
-                setTimeout(() => {
-                    html2canvas(document.querySelector(selector)).then(sourceCanvas => {
-                        sourceCanvas.toBlob(async (blob) => {
-                            const item = new ClipboardItem({'image/png': blob});
-                            await navigator.clipboard.write([item]);
-                            event.target.innerText = 'Скопійовано'
-                            setTimeout(() => {event.target.innerText = 'Копіювати'}, 2000)
-                        });
-                    });
-
-                }, 10)
+                setTimeout(async () => {
+                    try {
+                        const element = isSvg ? event.currentTarget.querySelector('svg') : document.querySelector(selector);
+                        const blob = await snapdom.toBlob(element, { type: 'png' });
+    
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        event.target.innerText = 'Скопійовано'
+                    } catch (error) {
+                        console.error('Помилка копіювання:', error);
+                        event.target.innerText = 'Помилка'
+                    } finally {
+                        setTimeout(() => { event.target.innerText = 'Копіювати' }, 2000);
+                    }
+                }, 10);
             }
         },
 
