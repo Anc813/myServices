@@ -170,7 +170,7 @@
             </thead>
             <tbody>
             <tr v-for="(row, index) in schedule" :key="index">
-                <td class="hour">{{ (scheduleNames[index] || '').replace('черга', '') }}</td>
+                <td class="hour">{{ scheduleNames[index].replace('черга', '') }}</td>
                 <td v-for="(char, idx) in row.replaceAll('1', 'G').replaceAll('0', 'R').split('')" :key="idx"
                     :class="[char, idx % 2 === 0 ? 'even' : 'odd']"></td>
             </tr>
@@ -260,7 +260,7 @@
             .attr('y', y)
             .attr('dy', '0.35em') // vertical alignment
             .attr('dx', '-0.4em') // vertical alignment
-            .attr('font-size', '35px')
+            .attr('font-size', '28px')
             .attr('font-family', 'sans-serif')
             .attr('font-weight', 'bold')
             .attr('text-anchor', 'middle')
@@ -352,31 +352,28 @@
                     .text(parseInt(index / 2));
             }
         }
- 
+
         g.append('text')
-            .attr('x', 0)
-            .attr('y', -50)
+            .attr('x', -10)
+            .attr('y', -60)
             .attr('dy', '0.35em') // vertical alignment
             .attr('dx', '-0.4em') // vertical alignment
-            .attr('font-size', '48px')
+            .attr('font-size', '32px')
             .attr('font-family', 'sans-serif')
             .attr('font-weight', 'bold')
             .attr('text-anchor', 'middle')
             .attr('fill', 'black')
-            .text((vueObject.scheduleNames[number] || '').replace('черга', ''));
+            .text(vueObject.scheduleNames[number]);
 
         let dateString
         if (date) {
             dateString = `${(new Date(date)).toLocaleDateString('uk', {weekday: 'short'})} ${(new Date(date)).toLocaleDateString('uk')}`
-            dateString1 = `${(new Date(date)).toLocaleDateString('uk', {weekday: 'long'})}`.toUpperCase()
-            dateString2 = `${(new Date(date)).toLocaleDateString('uk')}`
         }
 
         if (isOptimistic === true) {
             // g_appendText(g, 0, 0, 'при запланованому');
             // g_appendText(g, 0, 20, 'графіку відключень');
-            dateString1 && g_appendDateText(g, 0, -5, dateString1);
-            dateString2 && g_appendDateText(g, 0, 30, dateString2);
+            dateString && g_appendDateText(g, -3, -25, dateString);
         } else if (isOptimistic === false) {
             g_appendText(g, 0, 0, 'при вимушеному');
             g_appendText(g, 0, 20, 'збільшенні тривалості');
@@ -385,6 +382,23 @@
         } else {
             dateString && g_appendDateText(g, 0, 25, dateString);
         }
+
+
+        const textBlock = g.append('text')
+            .attr('x', -60)
+            .attr('y', 10)
+            .attr('font-size', '20px')
+            .attr('font-family', 'sans-serif')
+            .attr('font-weight', 'bold')
+            .attr('text-anchor', 'bold')
+            .attr('fill', 'black');
+
+        textBlock.selectAll('tspan')
+            .data('4:00-7:30\n10:00-14:00\n16:00-20:00\n22:00-24:00'.split('\n'))
+            .enter().append('tspan')
+            .attr('x', textBlock.attr('x'))
+            .attr('dy', (d, i) => i > 0 ? '1.2em' : 0)
+            .text(d => d);
 
         // g.append('text')
         //     .attr('x', 0)
@@ -400,31 +414,27 @@
 
         if (total) {
             g.append('text')
-                .attr('x', -7)
-                .attr('y', 65)
+                .attr('x', 225)
+                .attr('y', -210)
                 .attr('dy', '0.35em') // vertical alignment
                 .attr('dx', '0em') // vertical alignment
                 .attr('font-size', '25px')
                 .attr('font-family', 'sans-serif')
                 .attr('font-weight', 'bold')
-                .attr('text-anchor', 'middle')
-                .append('tspan').attr('fill', '#DB9DA8').text('-' + ((data.match(/[R]/g) || []).length / 2).toString())
-                .append('tspan').attr('fill', 'black').text(`  `)
-                .append('tspan')
-                    .attr('fill', 'black')
-                    .attr('stroke', '#ece665')
-                    .attr('stroke-width', '10px')
-                    .attr('paint-order', 'stroke')
-                    .text(((data.match(/[Y]/g) || []).length / 2).toString())
-                .append('tspan').attr('fill', 'black').text(`  `)
-                // .append('tspan').attr('fill', 'black').text(` ${scheduleName.slice(0, 1)} `)
-                .append('tspan').attr('fill', '#83BA48').attr('stroke', 'white').text(  '+' + ((data.match(/G/g) || []).length  /2).toString())
+                .attr('text-anchor', 'end')
 
+                const parentText = g.selectAll('text:last-of-type');
+                parentText.append('tspan').attr('x', 215).attr('dy', 5).attr('fill', '#C18B95').text( 'наявна: ' + ((data.match(/[R]/g) || []).length / 2).toString() )
+                parentText.append('tspan').attr('x', 215).attr('dy', '1.2em').attr('fill', '#74A33F').text('відсутня: '  + ((data.match(/G/g) || []).length  /2).toString())
+                parentText.append('tspan').attr('x', 215).attr('dy', '1.2em').attr('fill', '#CCC657').text('перемикання').attr('font-size', '18px')
+                parentText.append('tspan').attr('x', 215).attr('dy', '1.2em').attr('fill', '#CCC657').text('до ' + ((data.match(/[Y]/g) || []).length / 2).toString() )
 
+                // .append('tspan').attr('fill', '#DB9DA8').text( 'без світла: ' + ((data.match(/[R]/g) || []).length / 2).toString() )
+                // .append('tspan').text( 'перемикання: ' + ((data.match(/[Y]/g) || []).length / 2).toString() ).attr('fill', 'black').attr('stroke', '#ece665').attr('stroke-width', '10px').attr('paint-order', 'stroke')
+                // .append('tspan').attr('fill', '#83BA48').attr('stroke-width', 0).text('зі світлом: '  + ((data.match(/G/g) || []).length  /2).toString())
                 // .attr('fill', 'black')
                 // .text(scheduleName);
         }
-
     }
 </script>
 <script>
