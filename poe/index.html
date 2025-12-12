@@ -401,20 +401,24 @@
 
         if (total) {
             g.append('text')
-                .attr('x', -7)
-                .attr('y', 75)
+                .attr('x', -10)
+                .attr('y', 72)
                 .attr('dy', '0.35em') // vertical alignment
                 .attr('dx', '0em') // vertical alignment
                 .attr('font-size', '25px')
                 .attr('font-family', 'sans-serif')
                 .attr('font-weight', 'bold')
                 .attr('text-anchor', 'middle')
-                .append('tspan').attr('fill', '#DB9DA8').text('-' + ((data.match(/[RY]/g) || []).length / 2).toString())
+                .append('tspan').attr('fill', '#DB9DA8').text('-' + ((data.match(/[R]/g) || []).length / 2).toString())
                 .append('tspan').attr('fill', 'black').text(`  `)
-                // .append('tspan').attr('fill', 'black').text(` ${scheduleName.slice(0, 1)} `)
-                .append('tspan').attr('fill', '#83BA48').text(  '+' + ((data.match(/G/g) || []).length  /2).toString())
-                // .attr('fill', 'black')
-                // .text(scheduleName);
+                .append('tspan')
+                    .attr('fill', 'black')
+                    .attr('stroke', '#ece665')
+                    .attr('stroke-width', '10px')
+                    .attr('paint-order', 'stroke')
+                    .text(((data.match(/[Y]/g) || []).length / 2).toString())
+                .append('tspan').attr('fill', 'black').text(`  `)
+                .append('tspan').attr('fill', '#83BA48').attr('stroke', 'none').text(  '+' + ((data.match(/G/g) || []).length  /2).toString())
         }
     }
 </script>
