@@ -678,6 +678,10 @@
                         ranges.push(`${startTime}-${endTime}`);
                     }
 
+                    if (ranges.length === 0) {
+                        return `${scheduleName} без відключень`;
+                    }
+
                     return `${scheduleName} ${ranges.join('; ')}`;
                 });
 
