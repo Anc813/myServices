@@ -177,6 +177,14 @@
             </tbody>
         </table>
     </div>
+
+    <div v-if="schedule">
+        <h1>Текстовий звіт <button style="vertical-align: middle;" @click="copyTextReport">Копіювати</button></h1>
+        <pre id="text-report" style="white-space: pre-wrap; background-color: #f0f0f0; padding: 1em;">{{ textReport }}</pre>
+    </div>
+
+    <textarea id="copy-helper" style="position: absolute; left: -9999px;"></textarea>
+
 </div>
 
 <canvas id="canvas" style="display:none;"></canvas>
@@ -626,6 +634,68 @@
                         setTimeout(() => { event.target.innerText = 'Копіювати' }, 2000);
                     }
                 }, 10);
+            },
+            generateTextReport() {
+                if (!this.schedule) {
+                    return '';
+                }
+
+                const date = new Date(this.date);
+                const day = date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' });
+                const weekday = date.toLocaleDateString('uk-UA', { weekday: 'long' });
+                const dateString = `${weekday}, ${day}`;
+
+                const header = `Години відсутності електропостачання з урахуванням часу на перемикання:\n${dateString}`;
+
+                const minutesToHHMM = (minutes) => {
+                    const hours = Math.floor(minutes / 60);
+                    const mins = minutes % 60;
+                    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+                };
+
+                const lines = this.schedule.map((scheduleString, index) => {
+                    const scheduleName = this.scheduleNames[index] || `Черга ${index + 1}`;
+                    const ranges = [];
+                    let inOutage = false;
+                    let startIdx = -1;
+
+                    for (let i = 0; i < scheduleString.length; i++) {
+                        const isOutage = scheduleString[i] === 'R' || scheduleString[i] === 'Y';
+                        if (isOutage && !inOutage) {
+                            inOutage = true;
+                            startIdx = i;
+                        } else if (!isOutage && inOutage) {
+                            inOutage = false;
+                            const startTime = minutesToHHMM(startIdx * 30);
+                            const endTime = minutesToHHMM(i * 30);
+                            ranges.push(`${startTime}-${endTime}`);
+                        }
+                    }
+
+                    if (inOutage) {
+                        const startTime = minutesToHHMM(startIdx * 30);
+                        const endTime = '24:00';
+                        ranges.push(`${startTime}-${endTime}`);
+                    }
+
+                    return `${scheduleName} ${ranges.join('; ')}`;
+                });
+
+                const reportLinesWithSpacing = [];
+                for (let i = 0; i < lines.length; i++) {
+                    reportLinesWithSpacing.push(lines[i]);
+                    if ((i + 1) % 4 === 0 && i < lines.length - 1) {
+                        reportLinesWithSpacing.push('');
+                    }
+                }
+
+                return header + '\n\n' + reportLinesWithSpacing.join('\n');
+            },
+            async copyTextReport(event) {
+                const textToCopy = this.textReport;
+                await navigator.clipboard.writeText(textToCopy);
+                event.target.innerText = 'Скопійовано';
+                setTimeout(() => { event.target.innerText = 'Копіювати' }, 2000);
             }
         },
 
@@ -648,7 +718,7 @@
                 total: false,
                 tomorrow: false,
                 pathname: ''
-            };
+            }
         },
 
         async created() {
@@ -665,6 +735,11 @@
             this.pathname = window.location.pathname
 
             await this.makeSchedule()
+        },
+        computed: {
+            textReport() {
+                return this.generateTextReport();
+            }
         },
         watch: {
            schedule(newSchedule, oldSchedule) {
