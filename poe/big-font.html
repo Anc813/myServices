@@ -443,7 +443,8 @@
       const doc = parser.parseFromString(htmlString, 'text/html');
 
       // Get all rows from the tbody
-      const rows = doc.querySelectorAll('tbody tr');
+      const container = doc.querySelector('.gpvinfodetail');
+      const rows = container ? container.querySelectorAll('tbody tr') : [];
 
       // Array to store the results
       const schedules = [];
