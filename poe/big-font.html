@@ -92,7 +92,7 @@
 <script type="importmap">
     {
       "imports": {
-        "vue": "https://unpkg.com/vue@3.4.27/dist/vue.esm-browser.prod.js"
+        "vue": "/lib/vue@3.4.27/vue.esm-browser.prod.js"
       }
     }
 </script>
@@ -220,7 +220,7 @@
 
     // document.getElementById('convertButton').addEventListener('click', convertSvgToPngAndCopy);
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.0.0/d3.min.js"></script>
+<script src="/lib/d3@7.0.0/d3.min.js"></script>
 <script>
     // SPIRALE D3
     const spiralArc = (fromRadius, toRadius, width, fromAngle, toAngle) => {
@@ -510,7 +510,7 @@
 </script>
 <script type="module">
     import { createApp } from 'vue'
-    import { snapdom } from 'https://cdn.jsdelivr.net/npm/@zumer/snapdom/dist/snapdom.mjs';
+    import { snapdom } from '/lib/snapdom@3.3.0/snapdom.mjs';
 
     createApp({
         methods: {
