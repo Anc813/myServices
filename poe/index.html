@@ -458,6 +458,12 @@
             schedule += 'R';
           } else if (cell.classList.contains('light_3')) {
             schedule += 'Y';
+          } else if (cell.classList.contains('gpv-s1')) {  // POE layout since 27.10.2026
+            schedule += 'G';
+          } else if (cell.classList.contains('gpv-s2')) {
+            schedule += 'R';
+          } else if (cell.classList.contains('gpv-s3')) {
+            schedule += 'Y';
           }
         });
 
@@ -466,7 +472,8 @@
       });
 
       console.log(schedules)
-      return schedules.slice(0, 12);
+      // since 27.10.2026 there is a second (vertical) table with no colored td: skip its empty rows
+      return schedules.filter(s => s).slice(0, 12);
     }
     function parseScheduleNames(htmlString) {
       // Create a DOM parser
